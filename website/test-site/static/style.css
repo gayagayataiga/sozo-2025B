@@ -1,0 +1,654 @@
+/* ------------------------------------ */
+/* グローバルリセットと基本スタイル */
+/* ------------------------------------ */
+body {
+	font-family: 'Helvetica Neue', Arial, sans-serif;
+	background-color: #1a1a2e;
+	/* 暗めの背景色 */
+	color: #f0f0f0;
+	/* 明るい文字色 */
+	text-align: center;
+	padding: 20px;
+}
+
+#control-panel {
+	max-width: 450px;
+	margin: 20px auto;
+	padding: 25px;
+	background-color: #2c2c44;
+	/* コントロールパネルの背景 */
+	border-radius: 12px;
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+h3 {
+	color: #bb99ff;
+	/* セクション見出し色 */
+	border-bottom: 1px solid #3d3d5f;
+	padding-bottom: 10px;
+	margin-top: 20px;
+}
+
+/* ==================================== */
+/* 💡 2. 明るさスライダーのデザイン */
+/* ==================================== */
+#brightness-control {
+	background-color: #3d3d5f;
+	/* スライダーエリアの背景 */
+	padding: 15px;
+	border-radius: 10px;
+	margin-bottom: 20px;
+}
+
+#brightness-control label {
+	display: block;
+	font-size: 1.1em;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+.slider-group {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	/* アイコンとスライダーの間隔 */
+}
+
+/* アイコンのスタイル (2枚目の画像に倣う) */
+.icon-min,
+.icon-max {
+	font-size: 1.5em;
+	color: #f0f0f0;
+	line-height: 1;
+	/* 行の高さを調整 */
+}
+
+/* スライダーの基本スタイル */
+#brightness-slider {
+	flex-grow: 1;
+	/* スライダーが残りの幅を占める */
+	-webkit-appearance: none;
+	/* デフォルトのスタイルを無効化 (Chrome/Safari) */
+	appearance: none;
+	height: 8px;
+	background: #555577;
+	/* トラック（線）の色 */
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+/* スライダーの進捗部分 (青色) */
+#brightness-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	background: #0088ff;
+	/* ツマミの色 */
+	border-radius: 50%;
+	border: 3px solid #1a1a2e;
+	/* 背景との境界線 */
+	transition: background 0.2s;
+}
+
+/* ==================================== */
+/* 💡 3. 色ボタンのデザイン */
+/* ==================================== */
+#color-controls {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.color-btn {
+	flex: 1;
+	/* 幅を均等に */
+	height: 80px;
+	/* ボタンの高さを強調 */
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	/* テキストを下部に配置 */
+	align-items: center;
+	padding: 10px;
+	border-radius: 10px;
+	font-size: 0.9em;
+	color: #f0f0f0;
+	border: 2px solid transparent;
+	/* 初期は透明な枠線 */
+	transition: transform 0.1s, border-color 0.2s;
+	background-color: #3d3d5f;
+	/* ボタンの標準背景 */
+}
+
+/* 2枚目の画像のような視覚的なカラー表示 */
+.color-btn::before {
+	content: '';
+	display: block;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	margin-bottom: 5px;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 各色ボタンの背景とドットの色設定 */
+[data-color="white"]::before {
+	background-color: #ffffff;
+}
+
+[data-color="blue"]::before {
+	background-color: #3498db;
+}
+
+[data-color="yellow"]::before {
+	background-color: #ffcc66;
+}
+
+/* 選択されたボタンのデザイン (JSで active クラスを付与する場合) */
+.color-btn.active {
+	border-color: #bb99ff;
+	/* 選択時に枠線を強調 */
+	transform: scale(0.98);
+}
+
+
+button {
+	padding: 15px 25px;
+	font-size: 1.1em;
+	margin: 10px;
+	cursor: pointer;
+	border: none;
+	border-radius: 5px;
+	transition: background-color 0.3s, transform 0.1s;
+}
+
+#power-toggle {
+	display: block;
+	width: 90%;
+	margin: 15px auto;
+	font-size: 1.3em;
+	font-weight: bold;
+}
+
+#power-toggle[data-status="off"] {
+	background-color: #dc3545;
+	color: white;
+}
+
+#power-toggle[data-status="on"] {
+	background-color: #28a745;
+	color: white;
+}
+
+#timer-display {
+	font-size: 1.5em;
+	font-weight: bold;
+	color: #007bff;
+	margin: 15px 0;
+	padding: 5px;
+	border: 2px solid #007bff;
+	border-radius: 5px;
+	display: inline-block;
+}
+
+
+/* ------------------------------------ */
+/* 映像エリアとキャラクターのスタイル */
+/* ------------------------------------ */
+#visual-feedback-area {
+	margin-bottom: 20px;
+}
+
+#active-visual {
+	width: 300px;
+	height: 200px;
+	/* キャラクターが大きく動ける高さ */
+	margin: 20px auto;
+	position: relative;
+	/* 床面 */
+	border-bottom: 2px solid #ccc;
+}
+
+.active-character {
+	/* ★新規: 3つのキャラクターに共通の基本スタイルを適用 */
+	height: 60px;
+	/* サイズは個別に設定するためここでは省略 */
+	border-radius: 50%;
+	/* 正円 */
+	box-shadow:
+		inset 5px 5px 10px rgba(0, 0, 0, 0.2),
+		0 8px 15px rgba(0, 0, 0, 0.2);
+
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	/* 初期位置は中央 */
+	transform-origin: 50% 100%;
+	/* アニメーションの原点は下部に設定 */
+	transition: opacity 0.3s, background-color 0.3s;
+	opacity: 0;
+}
+
+/* ------------------------------------ */
+/* 1. メインキャラクター (#character-main) */
+/* ------------------------------------ */
+#character-main {
+	width: 100px;
+	height: 100px;
+	left: 50%;
+	/* 中央 */
+	transform: translateX(-50%);
+	background: linear-gradient(to bottom, #76FF03 30%, #4CAF50 100%);
+	/* 緑色 */
+}
+
+/* ------------------------------------ */
+/* 2. サブキャラクター A (#character-sub-a) */
+/* ------------------------------------ */
+#character-sub-a {
+	width: 40px;
+	/* メインより小さい */
+	height: 40px;
+	left: 10%;
+	/* 左側 */
+	transform: translateX(-50%);
+	background: linear-gradient(to bottom, #00BFFF 30%, #007FFF 100%);
+	/* 青色 */
+}
+
+/* ------------------------------------ */
+/* 3. サブキャラクター B (#character-sub-b) */
+/* ------------------------------------ */
+#character-sub-b {
+	width: 70px;
+	/* 中間のサイズ */
+	height: 70px;
+	left: 90%;
+	/* 右側 */
+	transform: translateX(-50%);
+	background: linear-gradient(to bottom, #FFD700 30%, #FFA500 100%);
+	/* 黄色/オレンジ色 */
+}
+
+
+/* ------------------------------------ */
+/* アニメーションの定義 (hopは変更なし) */
+/* ------------------------------------ */
+@keyframes hop {
+
+	/* 0%, 100%: 地面についている状態 */
+	0%,
+	100% {
+		transform: translate(-50%, 0) scale(1, 1);
+		background: linear-gradient(to bottom, #000080 30%, #191970 100%);
+	}
+
+	/* 40%: 飛び上がる前の沈み込み */
+	40% {
+		transform: translate(-50%, 0) scale(2, 0.5);
+		background: linear-gradient(to bottom, #0000cd 30%, #00008b 100%);
+	}
+
+	/* 50%: 空中にいる状態 */
+	50% {
+		transform: translate(-50%, -30px) scale(0.5, 2.5);
+		background: linear-gradient(to bottom, #00bfff 30%, #87cefe 100%);
+	}
+
+	/* 60%: 飛び上がった後の沈み込み (次の着地への準備) */
+	60% {
+		transform: translate(-50%, -10px) scale(1, 2);
+		background: linear-gradient(to bottom, #e0ffff 30%, #00ffff 100%);
+	}
+}
+
+/* ------------------------------------ */
+/* JavaScriptで適用するクラス (電源ON/OFF) */
+/* ------------------------------------ */
+/* 電源ON (照明がON) のとき */
+#active-visual.light-on .active-character {
+	/* ★修正: .active-character すべてに適用 */
+	opacity: 1;
+	/* 表示 */
+}
+
+/* ------------------------------------ */
+/* キャラクターごとのバラバラな動きの設定 */
+/* ------------------------------------ */
+
+/* 1. メイン (緑): 基準の動き */
+#active-visual.light-on #character-main {
+	animation: hop 2s infinite cubic-bezier(0.42, 0, 0.58, 1.0);
+}
+
+/* 2. サブ A (青): 速度を速く、開始を遅らせる */
+#active-visual.light-on #character-sub-a {
+	animation: hop 2.5s infinite cubic-bezier(0.42, 0, 0.58, 1.0);
+	animation-delay: 0.3s;
+	/* 0.3秒遅れてスタート */
+}
+
+/* 3. サブ B (黄): 速度を遅く、開始をさらに遅らせる */
+#active-visual.light-on #character-sub-b {
+	animation: hop 3s infinite cubic-bezier(0.42, 0, 0.58, 1.0);
+	animation-delay: 0.7s;
+	/* 0.7秒遅れてスタート */
+}
+
+/* 電源OFFのとき */
+#active-visual.light-off .active-character {
+	/* ★修正: .active-character すべてに適用 */
+	opacity: 0;
+	/* 非表示 */
+	animation: none;
+}
+
+/* 画像をきれいに表示する*/
+#active-visual {
+	/* (既存のスタイル) */
+	/* 画像がはみ出さないように設定 */
+	overflow: hidden;
+}
+
+#active-visual img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* ==================================== */
+/* 💡 モーダル（ポップアップ）用のCSS */
+/* ==================================== */
+
+/* モーダル全体（画面全体を覆い、中央に配置） */
+#setting-modal {
+	position: fixed;
+	/* 画面に固定 */
+	z-index: 1000;
+	/* 最前面に表示 */
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.8);
+	/* 半透明の黒い背景 */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* モーダルの中身 */
+.modal-content {
+	background-color: #2c2c44;
+	/* パネルと同じ暗い背景 */
+	padding: 30px;
+	border-radius: 12px;
+	position: relative;
+	width: 90%;
+	max-width: 450px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* 閉じるボタン */
+.close-button {
+	color: #f0f0f0;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+	position: absolute;
+	top: 10px;
+	right: 20px;
+}
+
+.close-button:hover {
+	color: #bb99ff;
+}
+
+/* 非表示にするためのクラス */
+.hidden {
+	display: none !important;
+}
+
+/* 既存の照明設定ボタンを、モーダルを開くボタンに置き換える */
+#open-settings-button {
+	padding: 15px 30px;
+	margin: 20px auto;
+	background-color: #007bff;
+	color: white;
+	border-radius: 8px;
+	font-size: 1.1em;
+	cursor: pointer;
+}
+
+/* ==================================== */
+/* 💡 カラーピッカーエリアの調整 (追記) */
+/* ==================================== */
+
+/* カラーピッカーのエリア全体 */
+#color-controls-modal {
+	padding-top: 15px;
+	text-align: center;
+}
+
+/* 見出し (明るさスライダーとの区切り線代わり) */
+#color-controls-modal h3 {
+	color: #bb99ff;
+	/* 既存のスタイルに合わせる */
+	margin-top: 20px;
+	margin-bottom: 15px;
+	border-top: 1px solid #3d3d5f;
+	/* 区切り線 */
+	padding-top: 20px;
+}
+
+#picker-container {
+	width: 250px;
+	height: auto;
+	margin: 0 auto;
+	/* 中央揃え */
+
+	/* ライブラリが生成する要素を中央に配置するため */
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+/* ピッカー全体の背景色とボーダーを調整 */
+.picker {
+	background-color: #312a4b;
+	/* 背景色をダークパープル系に */
+	border: 1px solid #5a4f7d;
+	/* 細いボーダーで囲む */
+	border-radius: 8px;
+	/* 角を少し丸める */
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	/* 軽い影で浮き出し感を */
+}
+
+/* スライダー（色相、彩度、明度）のトラック部分 */
+.picker-slider {
+	background-color: #4a406b;
+	/* スライダーの背景色を調整 */
+	border-radius: 4px;
+	/* スライダーも角を丸く */
+}
+
+/* スライダーのつまみ（ドラッグする部分） */
+.picker-handle {
+	border: 2px solid #fff;
+	/* つまみのボーダーを白に */
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+	/* 小さな影 */
+}
+
+/* HSVカラーフィールド（大きな四角い色選択エリア）のボーダー */
+.picker-hsv .picker-hsv_field {
+	border: 1px solid #5a4f7d;
+	/* フィールドのボーダーも調整 */
+	border-radius: 4px;
+	/* 角を丸く */
+}
+
+/* (もしエディタ表示をONにしている場合) エディタ部分の背景 */
+.picker-editor {
+	background-color: #312a4b;
+	border-top: 1px solid #5a4f7d;
+}
+
+/* 入力フィールドの背景色とテキスト色 */
+.picker-editor input[type="text"] {
+	background-color: #241e3d;
+	/* 入力フィールドの背景をさらに暗く */
+	color: #e0e0e0;
+	/* テキスト色を明るめに */
+	border: 1px solid #5a4f7d;
+	border-radius: 4px;
+}
+
+/* 1. Okボタンを含む不要な要素を非表示にする */
+#picker-container .picker_done {
+	/* Okボタンを非表示 */
+	display: none !important;
+}
+
+#picker-container .picker_editor {
+	/* RGB/HSV値を表示するエディタ部分を非表示 */
+	display: none !important;
+}
+
+/* 2. 色相環のサイズを調整 */
+#picker-container .picker_sl {
+	width: 250px !important;
+	/* 幅を親に合わせる */
+	height: 200px !important;
+	/* ★ 高さを 200px に固定 */
+	box-sizing: border-box;
+}
+
+/* 3. モーダルのコンテンツを中央に寄せ、色相環に合わせたスペースを確保 */
+.modal-content {
+	/* 中央に寄せるための調整 (もし崩れていたら) */
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+}
+
+#picker-container .picker_hue {
+	width: 250px !important;
+	/* 幅を親に合わせる */
+	height: 20px !important;
+	/* ★ スライダーの高さを 20px に固定 */
+	margin-top: 15px;
+	/* 上の色相環との隙間 */
+	box-sizing: border-box;
+}
+
+#picker-container .picker_v {
+	width: 250px !important;
+	height: 20px !important;
+	margin-top: 10px;
+}
+
+
+/* --- モーダルの基本スタイル (共通) --- */
+/*
+ * これが「ポップアップ」の仕組みの本体です。
+ * 画面全体に固定で表示（position: fixed）し、
+ * 背景を半透明（background-color）にします。
+*/
+#setting-modal,
+#robot-move-modal {
+	position: fixed;
+	/* 画面に固定する（最重要）*/
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6);
+	/* 背景を暗くする */
+
+	/* 中身を中央に配置 */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	z-index: 1000;
+	/* 最前面に表示 */
+}
+
+/* * これが「デフォルトで非表示」の仕組みです。
+ * .hidden クラスが付いている時は、表示しない（display: none）
+*/
+#setting-modal.hidden,
+#robot-move-modal.hidden {
+	display: none;
+}
+
+/* * モーダルの中身（白いボックス）のスタイル
+*/
+.modal-content {
+	background-color: #ffffff;
+	/* 白背景 */
+	padding: 24px;
+	border-radius: 12px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+	width: 90%;
+	max-width: 500px;
+	/* (画像では背景が暗い色なので、ご自身のスタイルに合わせて調整してください) */
+}
+
+/* --- ロボットモーダル内の固有スタイル (追記) --- */
+#arm-controls {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 15px;
+	margin-top: 20px;
+}
+
+#arm-controls button#arm-move-home {
+	grid-column: 1 / -1;
+	/* 「定位置へ」ボタンを1列全体に */
+}
+
+
+/* PC (デフォルト) のスタイルは、メディアクエリの外に記述 */
+
+/* ---------------------------------------------------- */
+/* ★ここからスマホ向けのスタイルを記述★ */
+/* ---------------------------------------------------- */
+
+@media (max-width: 600px) {
+
+	/* (1) スライダーなど幅の狭い要素を中央に寄せ、縦に並べる */
+	#control-panel {
+		width: 95%;
+		/* 幅を画面いっぱいに広げる */
+		padding: 10px;
+	}
+
+	/* (2) 画像や色相環のサイズを調整 */
+	#picker-container {
+		width: 90vw;
+		/* 画面の幅の90%に設定 */
+		height: 90vw;
+		/* 正方形を保つため、幅と同じ値にする (vw = viewport width) */
+	}
+
+	/* (3) モーダル（ポップアップ）を調整 */
+	.modal-content {
+		width: 100%;
+		/* スマホ画面全体を使う */
+		height: 100%;
+		margin: 0;
+		padding: 10px;
+		border-radius: 0;
+	}
+
+	/* (4) フォントサイズを少し小さくする (任意) */
+	h1 {
+		font-size: 1.5em;
+	}
+}

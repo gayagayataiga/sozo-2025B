@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>AI 支援照明ロボット UI</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+	<header>
+		<h1>AI 支援学習照明コントローラー</h1>
+	</header>
+	<div id="visual-feedback-area">
+		<h2 id="status-text">ロボットの状態：オフライン</h2>
+		<div id="active-visual" class="light-off">
+			<img id="stop-motion-image" src="../static/photo/77f0f9365a72eb7044602d9221f44ebb.jpeg" alt="animation">
+		</div>
+	</div>
+	<div id="control-panel">
+		<p>集中度スコア: <span id="concentration">N/A</span></p>
+		<p id="timer-display">経過時間: 00:00:00</p>
+		<h3>基本操作</h3>
+		<button id="power-toggle" data-status="off">電源をオンにする</button>
+		<button id="arm-move">アームを定位置へ動かす</button>
+		<button id="open-settings-button">💡 照明設定を開く</button>
+		<button id="open-robot-move-button">🤖 ロボット動作を開く</button>
+	</div>
+	<footer>
+		<p>※ サーバー起動が必要です</p>
+	</footer>
+	<div id="setting-modal" class="hidden">
+		<div class="modal-content">
+			<div id="brightness-control">
+				<label for="brightness-slider-modal"> 明るさ：<span id="brightness-value-modal">50</span>% </label>
+				<div class="slider-group">
+					<div class="icon-min">☀︎</div>
+					<input type="range" id="brightness-slider-modal" min="0" max="100" value="50">
+					<div class="icon-max">🔆</div>
+				</div>
+			</div>
+			<div id="color-controls-modal">
+				<h3>色相環</h3>
+				<div id="picker-container"></div>
+			</div>
+		</div>
+	</div>
+	<div id="robot-move-modal" class="hidden">
+		<div class="modal-content">
+			<h2>ロボット動作設定</h2>
+			<p>手動でアームの動作を制御します。</p>
+			<div id="arm-controls">
+				<button id="arm-move-home">アームを定位置へ動かす</button>
+				<button id="arm-move-left">アームを上へ</button>
+				<button id="arm-move-right">アームを下へ</button>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/vanilla-picker@2.12.3/dist/vanilla-picker.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js" defer></script>
+	<script>
+		const LOCAL_PC_IP = '{{ local_ip }}'; 
+	</script>
+	<script src="../static/illuminatingrobot.js" defer></script>
+	<script src="../static/animation.js" defer></script>
+</body>
+</html>
