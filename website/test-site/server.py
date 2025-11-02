@@ -9,6 +9,8 @@ import json
 import os
 
 DATA_JSON_PATH = "data.json"
+MOVE_MOTORS_JSON_PATH = "moveMotors.json"  # main.py が読み取るファイル
+file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
 
 # 1. FlaskとSocketIOの初期化
 app = Flask(__name__)
@@ -31,6 +33,41 @@ def get_local_ip():
     finally:
         s.close()
     return IP
+
+
+def update_motor_state(motor_id, angle):
+    """
+    moveMotors.json を安全に読み込み、指定されたモーターの角度を更新し、書き戻す。
+    main.py がこのファイルを読み取ることを想定。
+    """
+    with file_lock:  # 同時に書き込まないようにロック
+        try:
+            # 1. 現在のデータを読み込む (ファイルが存在しない場合、空の辞書で開始)
+            if os.path.exists(MOVE_MOTORS_JSON_PATH):
+                with open(MOVE_MOTORS_JSON_PATH, 'r', encoding='utf-8') as f:
+                    # ファイルが空の場合の対策
+                    content = f.read()
+                    if content:
+                        motor_data = json.loads(content)
+                    else:
+                        motor_data = {}
+            else:
+                motor_data = {}
+
+            # 2. データを更新 (例: motor_data = {'elbow': 90, 'wrist': 45})
+            motor_data[motor_id] = angle
+
+            # 3. ファイルに書き戻す
+            with open(MOVE_MOTORS_JSON_PATH, 'w', encoding='utf-8') as f:
+                json.dump(motor_data, f, indent=4, ensure_ascii=False)
+
+            print(f"🔩 {MOVE_MOTORS_JSON_PATH} を更新: {motor_id} = {angle}")
+
+        except json.JSONDecodeError:
+            print(
+                f"[エラー] {MOVE_MOTORS_JSON_PATH} の読み込みに失敗しました。ファイルが破損している可能性があります。")
+        except Exception as e:
+            print(f"[エラー] {MOVE_MOTORS_JSON_PATH} の書き込み中にエラー: {e}")
 
 
 @app.route('/')
@@ -88,19 +125,23 @@ def handle_control():
         # アームを動かす処理
         print(f"--- アームを {value} に動かします ---")
 
-    elif action == 'set_mode_elbow':
+    elif action == 'set_angle_elbow':
         try:
             angle = int(value)
-            print(f"--- アームの角度を {angle} 度に設定します ---")
+            print(f"--- 肘の角度を {angle} 度に設定します ---")
+            # JSONファイルに書き込む
+            update_motor_state('elbow', angle)  # 'elbow' は main.py が読むキー
         except ValueError:
             print(f"[エラー] 角度の値が数値ではありません: {value}")
         except Exception as e:
             print(f"[エラー] モーター制御中に予期せぬエラー: {e}")
+
     elif action == 'set_angle_wrist':
         try:
             angle = int(value)
             print(f"--- 手首の角度を {angle} 度に設定します ---")
-
+            # JSONファイルに書き込む
+            update_motor_state('wrist', angle)  # 'wrist' は main.py が読むキー
         except ValueError:
             print(f"[エラー] 手首の角度の値が数値ではありません: {value}")
 
