@@ -29,7 +29,8 @@ except ImportError as e:
 
 # ラズベリーパイからくる映像ストリームのURL
 # 家、TeaLab,TeaClassで全然違うので注意
-STREAM_URL = 'http://10.27.72.43:5000/video_feed'
+# 'http://10.27.72.43:5000/video_feed'→家
+STREAM_URL = 'http://10.27.75.121:5001/video_feed'
 
 # --- 状態定義 ---
 # 上から順に上半身を探す -> 顔を探す -> 顔を分析・追跡
@@ -214,7 +215,6 @@ while True:
                         # 3. AIに渡すデータを準備 (キューをリストに変換して渡す)
                         ai_input_data = {
                             'name': name,
-                            # ★時系列データを丸ごと渡す
                             'time_series_data': list(historical_data)
                         }
 
@@ -228,7 +228,7 @@ while True:
                     try:
                         # ログファイルを 'w' (上書き) モードで開く
                         with open(ai_logfile_path, 'w', encoding='utf-8') as log_file:
-                            # ★ Popenで ai.py を非同期起動 ★
+                            # Popenで ai.py を非同期起動
                             # stdout (print) と stderr (エラー) の両方をログファイルに書き込む
                             ai_process = subprocess.Popen(
                                 [python_executable, "ai.py"],
@@ -242,9 +242,9 @@ while True:
                         print(f"--- ❌ AIの起動に失敗しました: {e} ---")
 
         else:
-            # ★★★ 全員見失ったら S1 に戻る ★★★
+            #  全員見失ったら S1 に戻る
             print("[S3 -> S1] 顔の追跡をロスト。上半身から探索を再開します。")
-            current_state = STATE_SEARCHING_BODY  # (前回のバグ修正済み)
+            current_state = STATE_SEARCHING_BODY
 
     time.sleep(0.3)  # ファイル削除の小さな遅延
 
@@ -252,11 +252,11 @@ while True:
     if os.path.exists(result_file):
         print("--- 💡 AIの結果ファイル (ai_result.json) を検出！ ---")
         try:
-            # 1. AIの結果を読み込む
+            # AIの結果を読み込む
             with open(result_file, 'r') as f:
                 ai_data = json.load(f)
 
-            # 2. サーバー用の共有ファイル (data.json) を更新する
+            # サーバー用の共有ファイル (data.json) を更新する
             # (ここでは、既存のdata.jsonにAIデータを追記/更新する想定)
 
             # まず既存のdata.jsonを読み込む (なければ作成)
@@ -277,16 +277,15 @@ while True:
 
             print(f"--- data.json を更新しました: {ai_data} ---")
 
-            # 3. 処理済みの結果ファイルを削除
+            # 処理済みの結果ファイルを削除
             os.remove(result_file)
-            time.sleep(0.1)  # ファイル削除の小さな遅延
+            time.sleep(0.01)  # ファイル削除の小さな遅延
 
         except Exception as e:
             print(f"AI結果ファイルの処理中にエラー: {e}")
             if os.path.exists(result_file):
                 os.remove(result_file)  # エラー時もファイルを削除して無限ループを防ぐ
 
-    # --- (最終的な画面表示、終了処理は変更なし) ---
     cv2.imshow("Main Controller (Brain)", display_frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):

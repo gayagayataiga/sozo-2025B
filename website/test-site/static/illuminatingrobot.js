@@ -129,16 +129,6 @@ powerToggle.addEventListener('click', () => {
 	}
 });
 
-// アーム動作ボタン
-document.getElementById('arm-move').addEventListener('click', () => {
-	if (isPowerOn) {
-		// サーバーへ信号送信 (REST APIを使用)
-		sendCommand('move_arm', 'home');
-	} else {
-		alert('電源がオフです。電源をオンにしてください。');
-	}
-});
-
 // 強弱（明るさ）スライダー
 const brightnessSlider = document.getElementById('brightness-slider');
 const brightnessValue = document.getElementById('brightness-value');
@@ -169,15 +159,14 @@ document.querySelectorAll('.color-btn').forEach(button => {
 		const color = event.target.getAttribute('data-color');
 
 		if (isPowerOn) {
-			// ★★★ ハイライト処理の追加 ★★★
-			// 1. 全ボタンから 'active' クラスを削除
+			// 全ボタンから 'active' クラスを削除
 			document.querySelectorAll('.color-btn').forEach(btn => {
 				btn.classList.remove('active');
 			});
-			// 2. クリックされたボタンに 'active' クラスを追加
+			// クリックされたボタンに 'active' クラスを追加
 			event.target.classList.add('active');
 
-			// ★ サーバーへ信号送信 (REST APIを使用)
+			// サーバーへ信号送信 (REST APIを使用)
 			sendCommand('set_color', color);
 		} else {
 			alert('電源がオフです。色設定はできません。');
@@ -221,10 +210,11 @@ if (settingModal) {
 
 // 1. HTML要素を取得 (モーダル内にあることを確認)
 const pickerContainer = document.getElementById('picker-container');
+let picker = null;
 
 if (pickerContainer) {
 	// 2. カラーピッカーを初期化
-	const picker = new Picker({
+	picker = new Picker({
 		parent: pickerContainer,     // どのHTML要素内にピッカーを配置するか
 		popup: false,                // ポップアップではなく、常時表示（インライン）
 		color: 'rgb(255, 0, 0)',     // 初期色
@@ -241,6 +231,29 @@ if (pickerContainer) {
 			if (isPowerOn) {
 				sendCommand('set_color_wheel', rgbString);
 			}
+		}
+	});
+}
+
+
+const resetColorButton = document.getElementById('reset-color-button');
+if (resetColorButton) {
+	resetColorButton.addEventListener('click', () => {
+		if (isPowerOn) {
+			const resetColor = 'rgb(255, 255, 255)'; // リセットする色（白）
+
+			// 1. サーバーにリセット色（白）を送信
+			sendCommand('set_color_wheel', resetColor);
+			console.log('色をリセットしました:', resetColor);
+
+			// 2. カラーピッカーの表示も更新 (pickerインスタンスが存在する場合)
+			if (picker) {
+				// 第2引数を指定しないかfalseにすると、onChangeイベントを発火させずにUIのみ更新します
+				picker.setColor(resetColor);
+			}
+
+		} else {
+			alert('電源がオフです。色設定はできません。');
 		}
 	});
 }
@@ -289,8 +302,8 @@ if (armMoveHomeButton) {
 	armMoveHomeButton.addEventListener('click', () => handleArmMove('home'));
 }
 if (armMoveLeftButton) {
-	armMoveLeftButton.addEventListener('click', () => handleArmMove('left'));
+	armMoveLeftButton.addEventListener('click', () => handleArmMove('up'));
 }
 if (armMoveRightButton) {
-	armMoveRightButton.addEventListener('click', () => handleArmMove('right'));
+	armMoveRightButton.addEventListener('click', () => handleArmMove('down'));
 }
