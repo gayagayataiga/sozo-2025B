@@ -102,6 +102,14 @@ powerToggle.addEventListener('click', () => {
 		statusText.textContent = 'ロボットの状態：オンライン (稼働中)';
 		visualArea.classList.remove('light-off');
 		visualArea.classList.add('light-on');
+		// アームを定位置にリセット
+		currentArmAngle = ANGLE_HOME;
+
+		// 手首を定位置にリセット
+		currentWristAngle = WRIST_ANGLE_HOME;
+		//初期画像に更新
+		updateArmImage(currentArmAngle);
+
 
 		// サーバーへON信号送信 (REST APIを使用)
 		sendCommand('power_toggle', 'on');
@@ -265,8 +273,41 @@ const robotMoveModal = document.getElementById('robot-move-modal');
 
 // モーダル内のロボット操作ボタン
 const armMoveHomeButton = document.getElementById('arm-move-home');
-const armMoveLeftButton = document.getElementById('arm-move-left');
-const armMoveRightButton = document.getElementById('arm-move-right');
+const armMoveUpButton = document.getElementById('arm-move-up');
+const armMoveDownButton = document.getElementById('arm-move-down');
+
+const wristmotorUpButton = document.getElementById('wrist-motor-up');
+const wristmotorHomeButton = document.getElementById('wrist-motor-home');
+const wristmotorDownButton = document.getElementById('wrist-motor-down');
+
+// 画像を変えるコード
+const robotStatusImage = document.getElementById('robot-status-image');
+
+// 肘の角度のステップと範囲を定義 (例: 10度ずつ、70度～110度)
+const ANGLE_HOME = 90;  // 「定位置」の角度
+const ANGLE_STEP = 10;  // 1回に動く角度
+const ANGLE_MIN = 70;   // 「下へ」の可動域 (最小)
+const ANGLE_MAX = 100;  // 「上へ」の可動域 (最大)
+
+// 手首の角度のステップと範囲を定義
+const WRIST_ANGLE_HOME = 45;  // 手首の「定位置」
+const WRIST_ANGLE_STEP = 5;  // 手首の1回の動作角度
+const WRIST_ANGLE_MIN = 30;   // 手首の最小角度
+const WRIST_ANGLE_MAX = 60;  // 手首の最大角度
+
+// 肘の現在角度を持っておく変数
+let currentArmAngle = ANGLE_HOME;
+// 手首の現在角度を持っておく変数
+let currentWristAngle = WRIST_ANGLE_HOME;
+
+// 画像を保持しておく
+const ARM_IMAGE_MAP = {
+	70: '../static/photo/arm.jpg',  // 下限
+	80: '../static/photo/arm - コピー.jpg',
+	90: '../static/photo/arm - コピー (2).jpg',
+	100: '../static/photo/arm - コピー (3).jpg',
+};
+
 
 // 1. 「ロボット動作を開く」ボタンが押されたらモーダルを表示
 if (openRobotMoveButton) {
@@ -291,19 +332,104 @@ if (robotMoveModal) {
 function handleArmMove(action) {
 	if (isPowerOn) {
 		// サーバーへ信号送信 (REST APIを使用)
-		sendCommand('move_arm', action);
+		switch (action) {
+			case 'home':
+				currentArmAngle = ANGLE_HOME;
+				break;
+			case 'up': // 「アームを上へ」
+				if (currentArmAngle + ANGLE_STEP > ANGLE_MAX) {
+					alert('これ以上アームを上げることはできません。');
+				}
+				// 最大角度(ANGLE_MAX)を超えないようにする
+				currentArmAngle = Math.min(currentArmAngle + ANGLE_STEP, ANGLE_MAX);
+				break;
+			case 'down': // 「アームを下へ」
+				if (currentArmAngle - ANGLE_STEP < ANGLE_MIN) {
+					alert('これ以上アームを下げることはできません。');
+				}
+				// 最小角度(ANGLE_MIN)より下がらないようにする
+				currentArmAngle = Math.max(currentArmAngle - ANGLE_STEP, ANGLE_MIN);
+				break;
+		}
+		// 現在の肘の角度をサーバーに送信
+		sendCommand('set_angle_elbow', currentArmAngle);
+
+		// 3. 新しい角度に基づいて画像を一括更新
+		updateArmImage(currentArmAngle);
 	} else {
 		alert('電源がオフです。電源をオンにしてください。');
 	}
 }
 
+function handleWristMotor(action) {
+	if (isPowerOn) {
+
+		// 1. action に応じて「手首の角度」の変数を更新
+		switch (action) {
+			case 'home':
+				currentWristAngle = WRIST_ANGLE_HOME;
+				break;
+			case 'up': // 「上へ」
+				if (currentWristAngle + WRIST_ANGLE_STEP > WRIST_ANGLE_MAX) {
+					alert('これ以上手首を上げることはできません。');
+				}
+				// 最大角度(WRIST_ANGLE_MAX)を超えないようにする
+				currentWristAngle = Math.min(currentWristAngle + WRIST_ANGLE_STEP, WRIST_ANGLE_MAX);
+				break;
+			case 'down': // 「下へ」
+				if (currentWristAngle - WRIST_ANGLE_STEP < WRIST_ANGLE_MIN) {
+					alert('これ以上手首を下げることはできません。');
+				}
+				// 最小角度(WRIST_ANGLE_MIN)より下がらないようにする
+				currentWristAngle = Math.max(currentWristAngle - WRIST_ANGLE_STEP, WRIST_ANGLE_MIN);
+				break;
+		}
+
+		// 2. 現在の手首の角度をサーバーに送信
+		console.log(`手首の角度: ${currentWristAngle}度`);
+		sendCommand('set_angle_wrist', currentWristAngle);
+
+	} else {
+		alert('電源がオフです。電源をオンにしてください。');
+	}
+}
 // 各ボタンにイベントを割り当て
 if (armMoveHomeButton) {
 	armMoveHomeButton.addEventListener('click', () => handleArmMove('home'));
 }
-if (armMoveLeftButton) {
-	armMoveLeftButton.addEventListener('click', () => handleArmMove('up'));
+if (armMoveUpButton) {
+	armMoveUpButton.addEventListener('click', () => handleArmMove('up'));
 }
-if (armMoveRightButton) {
-	armMoveRightButton.addEventListener('click', () => handleArmMove('down'));
+if (armMoveDownButton) {
+	armMoveDownButton.addEventListener('click', () => handleArmMove('down'));
+}
+if (wristmotorUpButton) {
+	wristmotorUpButton.addEventListener('click', () => handleWristMotor('up'));
+}
+if (wristmotorHomeButton) {
+	wristmotorHomeButton.addEventListener('click', () => handleWristMotor('home'));
+}
+if (wristmotorDownButton) {
+	wristmotorDownButton.addEventListener('click', () => handleWristMotor('down'));
+}
+
+
+
+
+
+/**
+ * 現在の角度に基づいて、ロボットの画像を指定の角度のものに更新する
+ * @param {number} angle - 表示したい角度
+ */
+function updateArmImage(angle) {
+	console.log(`現在の角度: ${angle}度`);
+
+	if (robotStatusImage && ARM_IMAGE_MAP[angle]) {
+		// 対応表 (ARM_IMAGE_MAP) から正しい画像パスを取得して設定
+		robotStatusImage.src = ARM_IMAGE_MAP[angle];
+	} else {
+		// もし 75度 など、対応表にない角度が指定された場合
+		console.warn(`角度 ${angle} に対応する画像が ARM_IMAGE_MAP にありません。`);
+		// (オプション: 一番近い角度の画像を探すロジックも組めます)
+	}
 }
