@@ -65,6 +65,11 @@ AI_LOG_FILENAME = 'ai_log.txt'
 # サーバー(Web UI)と共有するデータファイル
 SHARED_DATA_FILENAME = 'data.json'
 
+# main.py が読み取るファイル
+# webサイトからの指示でモーターを動かすためのファイル
+MOVE_MOTORS_JSON_PATH = "moveMotors.json"
+
+
 # AI (サブプロセス) のスクリプト名
 AI_SCRIPT_FILENAME = 'ai.py'
 

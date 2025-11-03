@@ -7,9 +7,9 @@ import re
 import socket
 import json
 import os
+from src import config  # 追加: config.py から設定をインポート
 
-DATA_JSON_PATH = "data.json"
-MOVE_MOTORS_JSON_PATH = "moveMotors.json"  # main.py が読み取るファイル
+MOVE_MOTORS_JSON_PATH = config.MOVE_MOTORS_JSON_PATH
 file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
 
 # FlaskとSocketIOの初期化
@@ -167,8 +167,8 @@ def send_status_updates():
 
         try:
             # --- data.json を読み込む ---
-            if os.path.exists(DATA_JSON_PATH):
-                with open(DATA_JSON_PATH, 'r', encoding='utf-8') as f:
+            if os.path.exists(config.SHARED_DATA_FILENAME):
+                with open(config.SHARED_DATA_FILENAME, 'r', encoding='utf-8') as f:
                     try:
                         shared_data = json.load(f)
 
@@ -180,11 +180,14 @@ def send_status_updates():
                             'is_sleeping', False)  # 睡眠状態も取得
 
                     except json.JSONDecodeError:
-                        print(f"[警告] {DATA_JSON_PATH} のJSON形式が正しくありません。")
+                        print(
+                            f"[警告] {config.SHARED_DATA_FILENAME} のJSON形式が正しくありません。")
                     except Exception as e:
-                        print(f"[警告] {DATA_JSON_PATH} の読み込み中に予期せぬエラー: {e}")
+                        print(
+                            f"[警告] {config.SHARED_DATA_FILENAME} の読み込み中に予期せぬエラー: {e}")
             else:
-                print(f"[情報] {DATA_JSON_PATH} が見つかりません。デフォルト値を送信します。")
+                print(
+                    f"[情報] {config.SHARED_DATA_FILENAME} が見つかりません。デフォルト値を送信します。")
 
             # --- 送信するデータを作成 ---
             data_to_send = {

@@ -11,11 +11,11 @@ from collections import deque
 try:
     # pythonファイルのパスを通す
     # もしかしたらimportできないかもしれないので、try-exceptで囲む
-    from detect.detect_upperbody import UpperBodyDetector
-    from detect.detect_person import PersonIdentifier
-    from switchbot_python.switchbot_API_test import TOKEN, SECRET, TARGET_DEVICE_ID, generate_auth_headers, send_command
-    from serverFolder.sendrasev3command import EV3Commander
-    import config
+    from src.detect.detect_upperbody import UpperBodyDetector
+    from src.detect.detect_person import PersonIdentifier
+    from src.switchbot_python.switchbot_API_test import TOKEN, SECRET, TARGET_DEVICE_ID, generate_auth_headers, send_command
+    from src.serverFolder.sendrasev3command import EV3Commander
+    from src import config  # 設定変数をまとめたファイル
 except ImportError as e:
     print(f"エラー: モジュールのインポートに失敗しました。{e}")
     exit()
