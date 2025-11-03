@@ -123,3 +123,6 @@ AI_CONCENTRATION_KEY = 'concentration'
 
 # aiの分析結果で何もできなかった、受け取れなかったときの値
 AI_ANALYSIS_ERROR_VALUE = 'Unknown'
+
+# aiの分析結果内の睡眠状態のキー
+AI_SLEEPING_KEY = 'is_sleeping'
