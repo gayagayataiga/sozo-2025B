@@ -10,14 +10,12 @@ import numpy as np
 INPUT_JSON_PATH = "ai_input.json"
 # このスクリプトが生成する結果ファイル (main.py が読み取る)
 RESULT_JSON_PATH = "ai_result.json"
-# ★分析をリクエストする Colab サーバーのエンドポイント★
+# 分析をリクエストする Colab サーバーのエンドポイント
 ANALYSIS_SERVER_URL = "https://abrielle-crustal-lowell.ngrok-free.dev/upload_json"
 # サーバーへの接続タイムアウト（秒）
 SERVER_TIMEOUT = 10.0
 
-# ----------------------------------------------------------------
-
-# 1. 依存ライブラリのインポートチェック
+# 依存ライブラリのインポートチェック
 try:
     import requests  # requestsライブラリをインポート
     print("Successfully imported requests.")
@@ -28,8 +26,7 @@ except ModuleNotFoundError as e:
     sys.exit(1)  # 必須ライブラリがない場合は終了
 
 
-# 2. ヘルパークラス・関数
-
+# ヘルパークラス・関数
 class NumpyEncoder(json.JSONEncoder):
     """ Numpy配列をJSONシリアライズ可能にするためのエンコーダー """
 
@@ -63,7 +60,7 @@ def get_analysis_from_server(input_payload, server_url):
         )
         response.raise_for_status()  # 200系以外のステータスコードならエラー
 
-        # ★サーバーからのレスポンス(JSON)をパースして返す★
+        # サーバーからのレスポンス(JSON)をパースして返す
         analysis_result = response.json()
         print(f" Analysis response received from server.")
         # print(f"   Server Response: {analysis_result}")
@@ -85,10 +82,9 @@ def get_analysis_from_server(input_payload, server_url):
             f" An unexpected error occurred during server communication: {e}")
         return None
 
+
 # --- ローカルの analyze_time_series 関数は削除 ---
-
-
-# 3. メイン処理
+# メイン処理
 def main_process():
     """
     メインの処理フロー
@@ -101,7 +97,7 @@ def main_process():
     unique_id = str(uuid.uuid4())  # この実行固有のID
     print(f"Run ID: {unique_id}")
 
-    # --- 1. 入力JSONの読み込み ---
+    # ---  入力JSONの読み込み ---
     if not os.path.exists(INPUT_JSON_PATH):
         print(f"---  FATAL: Input file not found: {INPUT_JSON_PATH} ---")
         return
@@ -118,7 +114,7 @@ def main_process():
             f"---  FATAL: An unexpected error occurred during loading: {e} ---")
         return
 
-    # --- 2. Colabサーバーに分析をリクエスト ---
+    # --- Colabサーバーに分析をリクエスト ---
     # input_data (time_series_dataを含む) をそのままペイロードとして送信
     if not ANALYSIS_SERVER_URL:
         print("---  FATAL: ANALYSIS_SERVER_URL が設定されていません。 ---")
@@ -126,12 +122,11 @@ def main_process():
 
     colab_response = get_analysis_from_server(input_data, ANALYSIS_SERVER_URL)
 
-    # --- 3. 最終結果データを作成 ---
-
+    # --- 最終結果データを作成 ---
     final_result_data = {}
 
     if colab_response:
-        # ★サーバーからのレスポンスをそのまま結果として採用★
+        # サーバーからのレスポンスをそのまま結果として採用
         # (Colab側が 'analysis' や 'debug_info' のキーを持つJSONを返すと想定)
         final_result_data = colab_response
 
@@ -140,7 +135,7 @@ def main_process():
         final_result_data['colab_run_id'] = colab_response.get(
             'run_id', 'N/A')  # Colab側のID
     else:
-        # ★サーバー分析失敗時のフォールバック (エラー通知)★
+        # サーバー分析失敗時のフォールバック (エラー通知)
         final_result_data = {
             "status": "error_colab_failed",
             "analysis": {
@@ -165,7 +160,7 @@ def main_process():
         "latest_mar": latest_data.get('mar'),
     }
 
-    # --- 4. 結果をローカルファイルに書き出す (main.py用) ---
+    # --- 結果をローカルファイルに書き出す ---
     try:
         with open(RESULT_JSON_PATH, 'w') as f:
             json.dump(final_result_data, f, indent=4, cls=NumpyEncoder)
