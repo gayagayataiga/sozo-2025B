@@ -12,7 +12,7 @@ DATA_JSON_PATH = "data.json"
 MOVE_MOTORS_JSON_PATH = "moveMotors.json"  # main.py が読み取るファイル
 file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
 
-# 1. FlaskとSocketIOの初期化
+# FlaskとSocketIOの初期化
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'  # 実際にはランダムな文字列に
 CORS(app)  # すべてのオリジンからのリクエストを許可
@@ -42,7 +42,7 @@ def update_motor_state(motor_id, angle):
     """
     with file_lock:  # 同時に書き込まないようにロック
         try:
-            # 1. 現在のデータを読み込む (ファイルが存在しない場合、空の辞書で開始)
+            # 現在のデータを読み込む (ファイルが存在しない場合、空の辞書で開始)
             if os.path.exists(MOVE_MOTORS_JSON_PATH):
                 with open(MOVE_MOTORS_JSON_PATH, 'r', encoding='utf-8') as f:
                     # ファイルが空の場合の対策
@@ -54,14 +54,14 @@ def update_motor_state(motor_id, angle):
             else:
                 motor_data = {}
 
-            # 2. データを更新 (例: motor_data = {'elbow': 90, 'wrist': 45})
+            # データを更新 (例: motor_data = {'elbow': 90, 'wrist': 45})
             motor_data[motor_id] = angle
 
-            # 3. ファイルに書き戻す
+            # ファイルに書き戻す
             with open(MOVE_MOTORS_JSON_PATH, 'w', encoding='utf-8') as f:
                 json.dump(motor_data, f, indent=4, ensure_ascii=False)
 
-            print(f"🔩 {MOVE_MOTORS_JSON_PATH} を更新: {motor_id} = {angle}")
+            print(f" {MOVE_MOTORS_JSON_PATH} を更新: {motor_id} = {angle}")
 
         except json.JSONDecodeError:
             print(
@@ -82,11 +82,9 @@ def serve_index():
 
 
 # ------------------------------------------------------------------
-# 2. ブラウザからの「操作」を受け取る (API)
+#  ブラウザからの「操作」を受け取る (API)
 # (JavaScriptの sendCommand 関数がここにアクセスする)
 # ------------------------------------------------------------------
-
-
 @app.route('/api/control', methods=['POST'])
 def handle_control():
     """ ブラウザからのPOSTリクエストを受け取る """
@@ -95,7 +93,7 @@ def handle_control():
     value = data.get('value')
 
     #  サーバーPCのターミナルに、ブラウザからの入力を表示
-    print(f"✅ ブラウザから受信: アクション={action}, 値={value}")
+    print(f" ブラウザから受信: アクション={action}, 値={value}")
 
     if action == 'power_toggle':
         # 電源ON/OFFの処理 (value は 'on' または 'off')
@@ -151,12 +149,11 @@ def handle_control():
     # ブラウザに「正常に受け取った」ことを伝える
     return jsonify({"status": "success", "received_action": action})
 
+
 # ------------------------------------------------------------------
-# 3. サーバーPCの情報をブラウザに「送信」する (WebSocket)
+# サーバーPCの情報をブラウザに「送信」する (WebSocket)
 # (JavaScriptの socket.on('status_update', ...) がこれを受信する)
 # ------------------------------------------------------------------
-
-
 def send_status_updates():
     """
     バックグラウンドで実行され、data.json を読み込み、
@@ -213,13 +210,13 @@ def send_status_updates():
 @socketio.on('connect')
 def handle_connect():
     """ ブラウザがWebSocketに接続したときに呼ばれる """
-    print("✅ ブラウザがWebSocketに接続しました。")
+    print(" ブラウザがWebSocketに接続しました。")
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
     """ ブラウザが切断したときに呼ばれる """
-    print("❌ ブラウザが切断されました。")
+    print(" ブラウザが切断されました。")
 
 
 # ------------------------------------------------------------------

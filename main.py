@@ -130,7 +130,7 @@ while True:
             for face in face_results:
                 name = face["name"]
                 if not name.startswith("Unknown"):
-                    print(f"👋 Hello {name}!")
+                    print(f" Hello {name}!")
                     # MAR (口) と Pose (P/Y/R) も表示
                     print(
                         f"  (初回 EAR: {face['ear']:.2f}, MAR: {face['mar']:.2f})")
@@ -166,13 +166,13 @@ while True:
                 # ※ 閾値 (0.2) は環境や人によって調整が必要です
                 eye_status = "開いている"
                 if ear < 0.20:
-                    eye_status = "閉じている 😴"
+                    eye_status = "閉じている "
 
                 # 2. 口の状態 (MAR)
                 # ※ 閾値 (0.5) は調整が必要です
                 mouth_status = "閉じている"
                 if mar > 0.5:
-                    mouth_status = "開いている 😮"
+                    mouth_status = "開いている "
 
                 # 3. 顔の向き (Yaw)
                 # ※ 閾値 (15.0) は調整が必要です
@@ -216,7 +216,7 @@ while True:
                         print(
                             f"--- AI分析待機中 (データ収集中 {len(historical_data)}/{historical_data.maxlen}個) ---")
                     else:
-                        print("--- 🧠 AI分析を非同期でトリガーします ---")
+                        print("---  AI分析を非同期でトリガーします ---")
 
                         # 3. AIに渡すデータを準備 (キューをリストに変換して渡す)
                         ai_input_data = {
@@ -245,7 +245,7 @@ while True:
                         last_ai_trigger_time = time.time()  # 実行時刻を更新
                         print(f"--- AI起動成功。ログは {ai_logfile_path} を確認 ---")
                     except Exception as e:
-                        print(f"--- ❌ AIの起動に失敗しました: {e} ---")
+                        print(f"---  AIの起動に失敗しました: {e} ---")
 
         else:
             #  全員見失ったら S1 に戻る
@@ -256,7 +256,7 @@ while True:
 
     result_file = 'ai_result.json'
     if os.path.exists(result_file):
-        print("--- 💡 AIの結果ファイル (ai_result.json) を検出！ ---")
+        print("---  AIの結果ファイル (ai_result.json) を検出！ ---")
         try:
             # AIの結果を読み込む
             with open(result_file, 'r') as f:
