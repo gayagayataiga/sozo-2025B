@@ -14,6 +14,7 @@ RASPBERRY_PI_IP = "10.27.75.121"
 # 映像ストリームのポートとパス
 STREAM_PORT = 5001
 STREAM_PATH = "/video_feed"
+STREAM_URL = f'http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}'
 # 構築されるURL: f"http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}"
 
 # ストリーム接続時の安定待ち時間 (秒)
