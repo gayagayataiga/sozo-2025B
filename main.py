@@ -23,6 +23,7 @@ try:
     from detect.detect_upperbody import UpperBodyDetector
     from detect.detect_person import PersonIdentifier
     from switchbot_python.switchbot_API_test import TOKEN, SECRET, TARGET_DEVICE_ID, generate_auth_headers, send_command
+    from serverFolder.sendrasev3command import EV3Commander
 except ImportError as e:
     print(f"エラー: モジュールのインポートに失敗しました。{e}")
     exit()
@@ -32,6 +33,10 @@ except ImportError as e:
 # ラズパイのIPアドレス
 RASPBERRY_PI_IP = "10.27.75.121"
 STREAM_URL = f'http://{RASPBERRY_PI_IP}:5001/video_feed'
+
+# ev3との通信を定義
+print(f"EV3通信機を IP: {RASPBERRY_PI_IP} で初期化します...")
+ev3_communicator = EV3Commander(RASPBERRY_PI_IP)
 
 # --- 状態定義 ---
 # 上から順に上半身を探す -> 顔を探す -> 顔を分析・追跡
