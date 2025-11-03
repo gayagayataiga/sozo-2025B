@@ -90,8 +90,8 @@ def serve_index():
 def handle_control():
     """ ブラウザからのPOSTリクエストを受け取る """
     data = request.json
-    action = data.get('action')
-    value = data.get('value')
+    action = data.get(config.ACTION_KEY)
+    value = data.get(config.VALUE_KEY)
 
     #  サーバーPCのターミナルに、ブラウザからの入力を表示
     print(f" ブラウザから受信: アクション={action}, 値={value}")
@@ -162,7 +162,7 @@ def send_status_updates():
     """
     while True:
         # --- デフォルト値を設定 ---
-        current_concentration = "Unknown"
+        current_concentration = config.AI_ANALYSIS_ERROR_VALUE
         is_sleeping_now = False  # 睡眠状態も取得する例
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -173,12 +173,14 @@ def send_status_updates():
                     try:
                         shared_data = json.load(f)
 
-                        ai_analysis_data = shared_data.get('ai_analysis', {})
-                        analysis_results = ai_analysis_data.get('analysis', {})
+                        ai_analysis_data = shared_data.get(
+                            config.AI_RESULT_KEY, {})
+                        analysis_results = ai_analysis_data.get(
+                            config.AI_ANALYSIS_KEY, {})
                         current_concentration = analysis_results.get(
-                            'concentration', 'Unknown')
+                            config.AI_CONCENTRATION_KEY, config.AI_ANALYSIS_ERROR_VALUE)
                         is_sleeping_now = analysis_results.get(
-                            'is_sleeping', False)  # 睡眠状態も取得
+                            config.AI_SLEEPING_KEY, False)  # 睡眠状態も取得
 
                     except json.JSONDecodeError:
                         print(
@@ -202,7 +204,7 @@ def send_status_updates():
             socketio.emit('status_update', data_to_send)
 
             print(
-                f"🚀 ブラウザへ送信: 集中度={current_concentration}, 睡眠={is_sleeping_now}")
+                f" ブラウザへ送信: 集中度={current_concentration}, 睡眠={is_sleeping_now}")
 
         except Exception as e:
             print(f"[エラー] send_status_updates ループ中にエラー: {e}")

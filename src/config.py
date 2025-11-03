@@ -105,3 +105,21 @@ ELBOW_MOVE_COMMAND = 'set_angle_elbow'
 
 # 手首を動かす命令の判別
 WRIST_MOVE_COMMAND = 'set_angle_wrist'
+
+# ブラウザから送られてくるactionのjsonキー
+ACTION_KEY = 'action'
+
+# ブラウザから送られてくるvalueのjsonキー
+VALUE_KEY = 'value'
+
+# aiの分析結果のjsonキー
+AI_RESULT_KEY = 'ai_analysis'
+
+# 分析したjsonの中の分析結果,analysisキー
+AI_ANALYSIS_KEY = 'analysis'
+
+# aiの分析結果内の集中度のキー
+AI_CONCENTRATION_KEY = 'concentration'
+
+# aiの分析結果で何もできなかった、受け取れなかったときの値
+AI_ANALYSIS_ERROR_VALUE = 'Unknown'
