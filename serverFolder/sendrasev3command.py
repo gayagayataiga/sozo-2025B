@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-import urllib3  # HTTPSの警告を非表示にするためにインポート（verify=Falseを使う場合）
+import urllib3
 
 # 自己署名証明書使用時の警告を無効化
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -39,20 +39,19 @@ def send_request_to_raspberry_pi(data):
             ENDPOINT,
             data=json.dumps(data),
             headers=headers,
-            # HTTPSは使用しないため 'verify' は不要ですが、もし使用する場合は True にしてください
-            # verify=False は不要（HTTP接続のため）
+            timeout=10,  # タイムアウト10秒
         )
 
         # 応答の確認
         response.raise_for_status()  # 200番台以外なら例外を発生させる
 
-        print("✅ リクエスト成功！")
+        print("リクエスト成功！")
         print(f"ステータスコード: {response.status_code}")
         print("ラズパイからの応答データ:")
         print(json.dumps(response.json(), indent=2, ensure_ascii=False))
 
     except requests.exceptions.RequestException as e:
-        print(f"❌ リクエスト失敗: {e}")
+        print(f"リクエスト失敗: {e}")
         if 'response' in locals() and response is not None:
             print(f"エラー応答内容: {response.text}")
         print("ヒント: ラズパイのIPアドレスとポート5000が正しいか、ラズパイ側サーバーが起動しているか確認してください。")
