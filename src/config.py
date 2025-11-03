@@ -75,6 +75,12 @@ FILE_OPERATION_DELAY_TINY = 0.01
 
 
 # server.pyで使う変数
+# 'index.html'があるtemplatesのパス
+INDEX_HTML_PATH = 'website/test-site/templates'
+# jsなどのコードがあるstaticのパス
+STATIC_FILES_PATH = 'website/test-site/static'
+
+
 # 集中度レベルの定義
 CONCENTRATION_LEVELS = ["低", "中", "高", "ゾーン"]
 

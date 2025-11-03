@@ -13,7 +13,8 @@ from src import config  # 追加: config.py から設定をインポート
 file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
 
 # FlaskとSocketIOの初期化
-app = Flask(__name__)
+app = Flask(__name__, template_folder=config.INDEX_HTML_PATH,
+            static_folder=config.STATIC_FILES_PATH)
 app.config['SECRET_KEY'] = 'your_secret_key'  # 実際にはランダムな文字列に
 CORS(app)  # すべてのオリジンからのリクエストを許可
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -73,11 +74,11 @@ def update_motor_state(motor_id, angle):
 @app.route('/')
 def serve_index():
     """ トップページへのアクセス時にHTMLを生成して返す """
-    # 1. PCのIPアドレスを取得
+    #  PCのIPアドレスを取得
     host_ip = get_local_ip()
     print(f"クライアントに渡すIPアドレス: {host_ip}")
 
-    # 2. 'index.html' テンプレートをレンダリングし、IPアドレスを渡す
+    #  'index.html' テンプレートをレンダリングし、IPアドレスを渡す
     return render_template('index.html', local_ip=host_ip)
 
 
