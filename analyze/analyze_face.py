@@ -160,7 +160,7 @@ class FaceAnalyzer:
         return ear
 
     def calculate_mar(self, mouth_points):
-        """ ★ 口の開き具合 (Mouth Aspect Ratio) を計算する (追加) """
+        """  口の開き具合 (Mouth Aspect Ratio) を計算する (追加) """
         # 口の内側のインデックス (60-67)
         inner_mouth = mouth_points[12:20]  # 60番から67番
 
@@ -177,7 +177,7 @@ class FaceAnalyzer:
         return mar
 
     def get_full_head_pose(self, shape_2d, image_shape):
-        """ ★ 頭の傾き (Pitch, Yaw, Roll) を計算する (Yaw以外も返すよう修正) """
+        """  頭の傾き (Pitch, Yaw, Roll) を計算する (Yaw以外も返すよう修正) """
 
         image_points = np.array([
             shape_2d[30],    # 鼻先
@@ -237,7 +237,7 @@ class FaceAnalyzer:
 
     def analyze_landmarks_only(self, gray, face, frame_shape):
         """
-        ★ 軽量版: (Yaw以外の計算を get_full_head_pose に移したため修正)
+         軽量版: (Yaw以外の計算を get_full_head_pose に移したため修正)
         """
         shape = self.predictor(gray, face)
         shape_np = face_utils.shape_to_np(shape)
@@ -252,7 +252,7 @@ class FaceAnalyzer:
 
     def analyze_medium(self, gray, face, frame_shape):
         """
-        ★ 中量版: ランドマーク + 詳細な特徴量 (EAR, MAR, Pose, 68点座標) (新設)
+         中量版: ランドマーク + 詳細な特徴量 (EAR, MAR, Pose, 68点座標) (新設)
         """
         # --- ランドマーク検出 ---
         shape = self.predictor(gray, face)
@@ -275,7 +275,7 @@ class FaceAnalyzer:
 
     def analyze_full(self, gray, face, frame_shape, frame_bgr):
         """
-        ★ 重量版: 中量版の特徴量 + 顔認証ベクトル (Encoding) (修正)
+         重量版: 中量版の特徴量 + 顔認証ベクトル (Encoding) (修正)
         """
         # (中量版と同じ処理を呼び出す)
         (avg_ear, mar, pitch, yaw, roll, landmarks_68) = self.analyze_medium(

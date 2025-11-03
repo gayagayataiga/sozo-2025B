@@ -20,7 +20,7 @@
 # DEFAULT_KNOWN_FACES_DIR = "./known_faces"
 # DEFAULT_LANDMARK_MODEL = "./dlib/shape_predictor_68_face_landmarks.dat"
 # DEFAULT_REC_MODEL = "./dlib/dlib_face_recognition_resnet_model_v1.dat"
-# DEFAULT_THRESHOLD = 0.6  # ★ 1.0 から 0.6 に修正
+# DEFAULT_THRESHOLD = 0.6  #  1.0 から 0.6 に修正
 # DEFAULT_COOLDOWN = 5.0
 
 
@@ -118,7 +118,7 @@
 #                     known_names.append(person_name)
 
 #                     print(f"    [OK] {person_name} を登録しました。")
-#                     break  # ★ 1人につき1つの顔を登録したら、次の人物フォルダへ
+#                     break  #  1人につき1つの顔を登録したら、次の人物フォルダへ
 #                 except Exception as e:
 #                     print(f"    [ERROR] {image_name} の分析中にエラーが発生しました: {e}")
 
@@ -141,7 +141,7 @@
 
 #     def process_frame(self, frame):
 #         """
-#         【★ 外部から呼び出すメイン関数 ★】
+#         【 外部から呼び出すメイン関数 】
 #         1フレームを処理し、検出結果を描画したフレームと、検出した名前のリストを返す。
 
 #         :param frame: BGR画像 (numpy array)
@@ -208,13 +208,13 @@
 #                         cv2.imwrite(filename, face_image)
 #                         print(f"[INFO] 新しい顔を保存しました: {filename}")
 
-#                         # ★ 動的に「既知」リストに追加
+#                         #  動的に「既知」リストに追加
 #                         self.known_encodings.append(new_encoding)
 #                         self.known_names.append(new_person_name)
 #                         print(f"[INFO] {new_person_name} をセッション中の記憶に追加しました。")
 
 #                         self.last_save_time = current_time
-#                         name = new_person_name  # ★ 描画する名前を更新
+#                         name = new_person_name  #  描画する名前を更新
 #                     else:
 #                         print(f"[WARN] 顔画像の切り出しに失敗しました (サイズ0)。")
 #                         self.unknown_counter -= 1  # カウンタを戻す
@@ -273,7 +273,7 @@
 #                 break
 #             continue
 
-#         # ★ クラスのメソッドを呼び出す ★
+#         #  クラスのメソッドを呼び出す
 #         processed_frame, detected_names = identifier.process_frame(frame)
 
 #         if detected_names:
@@ -359,7 +359,7 @@ class PersonIdentifier:
         self.unknown_counter = self._get_unknown_counter()
         print(f"[INFO] 現在のUnknown最大番号: {self.unknown_counter}")
 
-        # --- ★ トラッカー用の状態を追加 ---
+        # ---  トラッカー用の状態を追加 ---
         self.active_trackers = []  # dlib.correlation_tracker のリスト
         self.tracked_names = {}   # tracker_hash -> "Gayagaya" などの名前
 
@@ -425,7 +425,7 @@ class PersonIdentifier:
             if not os.path.isdir(person_dir):
                 continue
 
-            # --- ★ 変更点 1: この人専用のエンコーディングリストを作成 ---
+            # ---  変更点 1: この人専用のエンコーディングリストを作成 ---
             person_encodings = []
 
             image_files = []
@@ -465,13 +465,13 @@ class PersonIdentifier:
                         image.shape,  # 150x150 shape
                         image)       # 150x150 BGR
 
-                    # --- ★ 変更点 2: 1枚処理するごとに、一時リストに追加 ---
+                    # ---  変更点 2: 1枚処理するごとに、一時リストに追加 ---
                     person_encodings.append(face_encoding)
 
                 except Exception as e:
                     print(f"    [ERROR] {image_name} の分析中にエラーが発生しました: {e}")
 
-            # --- ★ 変更点 3: 全ての画像を処理した後、平均を計算して登録 ---
+            # ---  変更点 3: 全ての画像を処理した後、平均を計算して登録 ---
             if not person_encodings:
                 # 1枚も有効な画像がなかった場合
                 print(f"    [WARN] {person_name} は有効な顔画像を登録できませんでした。")
@@ -487,7 +487,7 @@ class PersonIdentifier:
             print(
                 f"    [OK] {person_name} を {len(person_encodings)} 枚の画像の平均で登録しました。")
 
-            # --- ★ 変更点 4: 1枚で終了していた `break` を削除 ---
+            # ---  変更点 4: 1枚で終了していた `break` を削除 ---
             # (旧) break  <- これを削除
 
         print(f"[INFO] 登録完了。 {len(known_names)} 件の顔データをロードしました。")
@@ -589,7 +589,7 @@ class PersonIdentifier:
                             self.unknown_counter -= 1
                 # --- (ここまでUnknown登録処理) ---
 
-                # ★ トラッカーを起動
+                #  トラッカーを起動
                 tracker = dlib.correlation_tracker()
                 # (frame_bgr, dlib.rectangle) で追跡開始
                 tracker.start_track(frame, face_rect)
@@ -740,7 +740,7 @@ def main_stream():
         if not ret:
             break
 
-        # ★ テスト時は identify モードのみ実行
+        #  テスト時は identify モードのみ実行
         processed_frame, detected_names = identifier.process_frame(
             frame, mode="identify")
 

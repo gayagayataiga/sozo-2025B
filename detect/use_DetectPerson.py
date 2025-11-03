@@ -45,13 +45,13 @@ print("ストリームを解放しました。")
 
 if ret:
     print("フレームを取得。顔分析を実行します...")
-    # ★ processed_image はもう使わないので、変数名を _ (アンダーバー) にしてもOK
+    #  processed_image はもう使わないので、変数名を _ (アンダーバー) にしてもOK
     processed_image, names = identifier.process_frame(frame)
 
     if names:
         print(f"検出結果: {names}")
 
-        # --- ★★★ ここから変更 ★★★ ---
+        # ---  ここから変更  ---
 
         recognized_count = 0
         # 検出された名前のリストをループ
@@ -64,7 +64,7 @@ if ret:
         if recognized_count == 0 and len(names) > 0:
             print("（認識済みの顔は見つかりませんでした）")
 
-        # --- ★★★ ここまで変更 ★★★ ---
+        # ---  ここまで変更  ---
 
     else:
         print("顔は検出されませんでした。")
