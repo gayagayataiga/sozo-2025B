@@ -1,7 +1,7 @@
 Successfully imported requests.
 --- ai.py started ---
 Python Executable: C:\Users\sd23099\Desktop\mine 10-17\souzou\sozo\Scripts\python.exe
-Run ID: 1535ca4f-c296-4083-8e0d-20e1a437de92
+Run ID: f9e17a56-192f-4d30-823e-dcb3901c2ad6
 Input JSON loaded successfully.
 Sending analysis request to https://abrielle-crustal-lowell.ngrok-free.dev/upload_json...
  Failed to get analysis: Request failed: 404 Client Error: Not Found for url: https://abrielle-crustal-lowell.ngrok-free.dev/upload_json
