@@ -9,7 +9,7 @@ import json
 import os
 from src import config  # 追加: config.py から設定をインポート
 
-MOVE_MOTORS_JSON_PATH = config.MOVE_MOTORS_JSON_PATH
+# MOVE_MOTORS_JSON_PATH = config.MOVE_MOTORS_JSON_PATH
 file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
 
 # FlaskとSocketIOの初期化
@@ -19,7 +19,7 @@ CORS(app)  # すべてのオリジンからのリクエストを許可
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # 集中度レベルのダミーデータ
-CONCENTRATION_LEVELS = ["低", "中", "高", "ゾーン"]
+# CONCENTRATION_LEVELS = ["低", "中", "高", "ゾーン"]
 
 
 def get_local_ip():
@@ -43,8 +43,8 @@ def update_motor_state(motor_id, angle):
     with file_lock:  # 同時に書き込まないようにロック
         try:
             # 現在のデータを読み込む (ファイルが存在しない場合、空の辞書で開始)
-            if os.path.exists(MOVE_MOTORS_JSON_PATH):
-                with open(MOVE_MOTORS_JSON_PATH, 'r', encoding='utf-8') as f:
+            if os.path.exists(config.MOVE_MOTORS_JSON_PATH):
+                with open(config.MOVE_MOTORS_JSON_PATH, 'r', encoding='utf-8') as f:
                     # ファイルが空の場合の対策
                     content = f.read()
                     if content:
@@ -58,16 +58,16 @@ def update_motor_state(motor_id, angle):
             motor_data[motor_id] = angle
 
             # ファイルに書き戻す
-            with open(MOVE_MOTORS_JSON_PATH, 'w', encoding='utf-8') as f:
+            with open(config.MOVE_MOTORS_JSON_PATH, 'w', encoding='utf-8') as f:
                 json.dump(motor_data, f, indent=4, ensure_ascii=False)
 
-            print(f" {MOVE_MOTORS_JSON_PATH} を更新: {motor_id} = {angle}")
+            print(f" {config.MOVE_MOTORS_JSON_PATH} を更新: {motor_id} = {angle}")
 
         except json.JSONDecodeError:
             print(
-                f"[エラー] {MOVE_MOTORS_JSON_PATH} の読み込みに失敗しました。ファイルが破損している可能性があります。")
+                f"[エラー] {config.MOVE_MOTORS_JSON_PATH} の読み込みに失敗しました。ファイルが破損している可能性があります。")
         except Exception as e:
-            print(f"[エラー] {MOVE_MOTORS_JSON_PATH} の書き込み中にエラー: {e}")
+            print(f"[エラー] {config.MOVE_MOTORS_JSON_PATH} の書き込み中にエラー: {e}")
 
 
 @app.route('/')
@@ -85,7 +85,7 @@ def serve_index():
 #  ブラウザからの「操作」を受け取る (API)
 # (JavaScriptの sendCommand 関数がここにアクセスする)
 # ------------------------------------------------------------------
-@app.route('/api/control', methods=['POST'])
+@app.route(config.BROWSER_CONTROL_URL, methods=['POST'])
 def handle_control():
     """ ブラウザからのPOSTリクエストを受け取る """
     data = request.json
@@ -95,17 +95,17 @@ def handle_control():
     #  サーバーPCのターミナルに、ブラウザからの入力を表示
     print(f" ブラウザから受信: アクション={action}, 値={value}")
 
-    if action == 'power_toggle':
+    if action == config.POWER_COMMAND:
         # 電源ON/OFFの処理 (value は 'on' または 'off')
         print(f"--- 電源を {value} にします ---")
         # (ここに実際のロボットの電源制御コードを書く)
 
-    elif action == 'set_brightness':
+    elif action == config.BRIGHTNESS_COMMAND:
         # 明るさ変更の処理 (value は 0〜100 の数値)
         print(f"--- 明るさを {value} にします ---")
         # (ここに実際のロボットの明るさ制御コードを書く)
 
-    elif action == 'set_color_wheel':
+    elif action == config.COLOR_WHEEL_COMMAND:
         #  新しく追加した色相環の処理
         # value は "rgb(R, G, B)" という文字列
         print(f"--- 新しい色 {value} を設定します ---")
@@ -119,11 +119,11 @@ def handle_control():
         except Exception as e:
             print(f"色の値の解析に失敗: {e}")
 
-    elif action == 'move_arm':
-        # アームを動かす処理
-        print(f"--- アームを {value} に動かします ---")
+    # elif action == config.ELBOW_MOVE_COMMAND:
+    #     # アームを動かす処理
+    #     print(f"--- アームを {value} に動かします ---")
 
-    elif action == 'set_angle_elbow':
+    elif action == config.ELBOW_MOVE_COMMAND:
         try:
             angle = int(value)
             print(f"--- 肘の角度を {angle} 度に設定します ---")
@@ -134,7 +134,7 @@ def handle_control():
         except Exception as e:
             print(f"[エラー] モーター制御中に予期せぬエラー: {e}")
 
-    elif action == 'set_angle_wrist':
+    elif action == config.WRIST_MOVE_COMMAND:
         try:
             angle = int(value)
             print(f"--- 手首の角度を {angle} 度に設定します ---")

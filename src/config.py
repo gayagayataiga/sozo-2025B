@@ -65,11 +65,6 @@ AI_LOG_FILENAME = 'ai_log.txt'
 # サーバー(Web UI)と共有するデータファイル
 SHARED_DATA_FILENAME = 'data.json'
 
-# main.py が読み取るファイル
-# webサイトからの指示でモーターを動かすためのファイル
-MOVE_MOTORS_JSON_PATH = "moveMotors.json"
-
-
 # AI (サブプロセス) のスクリプト名
 AI_SCRIPT_FILENAME = 'ai.py'
 
@@ -77,3 +72,30 @@ AI_SCRIPT_FILENAME = 'ai.py'
 # ファイルI/O（入出力）の競合を避けるための小さな遅延 (秒)
 FILE_OPERATION_DELAY_SHORT = 0.3
 FILE_OPERATION_DELAY_TINY = 0.01
+
+
+# server.pyで使う変数
+# 集中度レベルの定義
+CONCENTRATION_LEVELS = ["低", "中", "高", "ゾーン"]
+
+# main.py が読み取るファイル
+# webサイトからの指示でモーターを動かすためのファイル
+MOVE_MOTORS_JSON_PATH = "moveMotors.json"
+
+# ブラウザからの「操作」を受け取るURL
+BROWSER_CONTROL_URL = "/api/control"
+
+# 電源に関係する命令
+POWER_COMMAND = "power_toggle"
+
+# 明るさに関係する命令
+BRIGHTNESS_COMMAND = "set_brightness"
+
+# 色相環に関係する命令
+COLOR_WHEEL_COMMAND = "set_color_wheel"
+
+# 肘を動かす命令の判別
+ELBOW_MOVE_COMMAND = 'set_angle_elbow'
+
+# 手首を動かす命令の判別
+WRIST_MOVE_COMMAND = 'set_angle_wrist'
