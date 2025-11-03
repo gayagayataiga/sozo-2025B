@@ -197,7 +197,6 @@ class SwitchBotLight:
     def get_status(self):
         """
         現在のキャッシュ（内部状態）を辞書で返します。
-        (元の get_device_status_dict に相当)
         """
         return {
             "mode": self.mode,

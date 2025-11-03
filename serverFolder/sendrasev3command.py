@@ -26,9 +26,8 @@ data_to_send = {
 }
 # ----------------
 
+
 # --- リクエスト送信 ---
-
-
 def send_request_to_raspberry_pi(data):
     # headersはJSON形式を伝えるために必須
     headers = {'Content-Type': 'application/json'}

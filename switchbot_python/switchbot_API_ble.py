@@ -4,13 +4,13 @@ import asyncio
 from bleak import BleakClient
 
 # --- 設定 ---
-# ⚠️ 1. あなたのSwitchBotライトのMACアドレスに置き換えてください
+# あなたのSwitchBotライトのMACアドレスに置き換えてください
 LIGHT_MAC_ADDRESS = "94:A9:90:76:E3:AE"
 
-# 2. SwitchBot Color BulbのGATT通信用UUID
+# SwitchBot Color BulbのGATT通信用UUID
 CHARACTERISTIC_UUID = "cba20002-224d-11e6-9fb8-0002a5d5c51b"
 
-# 3. ライトの操作コマンドバイト列
+# ライトの操作コマンドバイト列
 # 点灯（オン）コマンド: [0x57, 0x01, 0x01]
 COMMAND_ON = bytes([0x57, 0x01, 0x01])
 
@@ -20,18 +20,17 @@ COMMAND_OFF = bytes([0x57, 0x01, 0x02])
 # 明るさ100%設定コマンド（例: 0x05は明るさ設定、0x64は100(0x64)）
 # COMMAND_BRIGHTNESS_100 = bytes([0x57, 0x05, 0x64])
 
-# 4. 色設定コマンド (追加)
-# コマンド形式: bytes([0x57, 0x07, Hue, Saturation, Brightness, 0x00, 0x00])
-# 赤 (H=0°, S=100%, V=100%)
-COMMAND_RED = bytes([0x57, 0x07, 0x00, 0x64, 0x64, 0x00, 0x00])
-# 緑 (H=120°, S=100%, V=100%)
-COMMAND_GREEN = bytes([0x57, 0x07, 0x50, 0x64, 0x64, 0x00, 0x00])
-# 青 (H=240°, S=100%, V=100%)
-COMMAND_BLUE = bytes([0x57, 0x07, 0xA0, 0x64, 0x64, 0x00, 0x00])
+# 色設定コマンド
+# コマンド形式: bytes([0x57, 0x01, r,g,b])
+# 赤 (R=255, G=0, B=0)
+COMMAND_RED = bytes([0x57, 0x01, 0x09, 255, 0, 0])
+# 緑 (R=0, G=255, B=0)
+COMMAND_GREEN = bytes([0x57, 0x01, 0x09, 0, 255, 0])
+# 青 (R=0, G=0, B=255)
+COMMAND_BLUE = bytes([0x57, 0x01, 0x09, 0, 0, 255])
+
 
 # --- 実行関数 ---
-
-
 async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERISTIC_UUID: str):
     """
     SwitchBotライトにBLE経由でコマンドを送信する
@@ -57,7 +56,7 @@ async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERIST
         print("💡 エラーが発生した場合、PCのBluetoothがONか、MACアドレスが正しいか確認してください。")
 
 
-# --- メインシーケンス関数 (色変更を追加) ---
+# --- メインシーケンス関数 ---
 async def main_sequence():
     """
     ライトを点灯させ、待機後に消灯、さらに待機後に再点灯し、最後に色を変更する一連の動作

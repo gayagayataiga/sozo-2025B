@@ -29,8 +29,9 @@ except ImportError as e:
 
 # ラズベリーパイからくる映像ストリームのURL
 # 家、TeaLab,TeaClassで全然違うので注意
-# 'http://10.27.72.43:5000/video_feed'→家
-STREAM_URL = 'http://10.27.75.121:5001/video_feed'
+# ラズパイのIPアドレス
+RASPBERRY_PI_IP = "10.27.75.121"
+STREAM_URL = f'http://{RASPBERRY_PI_IP}:5001/video_feed'
 
 # --- 状態定義 ---
 # 上から順に上半身を探す -> 顔を探す -> 顔を分析・追跡
