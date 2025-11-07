@@ -9,7 +9,7 @@ PYTHON_EXECUTABLE = sys.executable
 
 # --- ネットワーク設定 (Raspberry Pi / EV3) ---
 # ラズベリーパイのIPアドレス (環境に合わせて変更)
-RASPBERRY_PI_IP = "10.27.72.43"
+RASPBERRY_PI_IP = "10.27.73.108"
 
 # 映像ストリームのポートとパス
 STREAM_PORT = 5001
@@ -23,9 +23,14 @@ STREAM_STABILIZATION_WAIT = 1.0
 # --- SwitchBot API設定 ---
 # (注: 元のコードでは別ファイルからインポートしていましたが、
 #  本来config.pyに集約すべき項目です)
-SWITCHBOT_TOKEN = "YOUR_SWITCHBOT_TOKEN_HERE"
-SWITCHBOT_SECRET = "YOUR_SWITCHBOT_SECRET_HERE"
-SWITCHBOT_TARGET_DEVICE_ID = "YOUR_TARGET_DEVICE_ID_HERE"
+SWITCHBOT_TOKEN_WIFI = "YOUR_SWITCHBOT_TOKEN_HERE"
+SWITCHBOT_SECRET_WIFI = "YOUR_SWITCHBOT_SECRET_HERE"
+SWITCHBOT_TARGET_DEVICE_ID_WIFI = "YOUR_TARGET_DEVICE_ID_HERE"
+
+# BLEでおこなう際のMACアドレスとUUID
+LIGHT_MAC_ADDRESS = "94:A9:90:76:E3:AE"
+CHARACTERISTIC_UUID = "cba20002-224d-11e6-9fb8-0002a5d5c51b"
+
 
 # --- 状態定義 ---
 # (コードの可読性のため、ここに定義)
@@ -86,7 +91,9 @@ CONCENTRATION_LEVELS = ["低", "中", "高", "ゾーン"]
 
 # main.py が読み取るファイル
 # webサイトからの指示でモーターを動かすためのファイル
-MOVE_MOTORS_JSON_PATH = "moveMotors.json"
+MOVE_MOTORS_JSON_PATH = "data/moveMotors.json"
+
+SAVE_HASH_DB_PATH = "data/hash_db.json"
 
 # ブラウザからの「操作」を受け取るURL
 BROWSER_CONTROL_URL = "/api/control"

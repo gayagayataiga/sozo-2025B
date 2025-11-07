@@ -6,6 +6,8 @@ import os         # ファイルの存在確認・削除のため
 import numpy as np  # 顔ランドマーク(Numpy配列)をJSONに変換するため
 import sys
 from collections import deque
+import asyncio
+import threading
 
 # --- 各モジュールから「クラス」をインポート ---
 try:
@@ -15,6 +17,8 @@ try:
     from src.detect.detect_person import PersonIdentifier
     from src.switchbot_python.switchbot_API_test import TOKEN, SECRET, TARGET_DEVICE_ID, generate_auth_headers, send_command
     from src.serverFolder.sendrasev3command import EV3Commander
+    from src.makehash import check_json_changes
+    from src.switchbot_python.switchbot_API_ble import control_switchbot_light, LIGHT_MAC_ADDRESS, COMMAND_ON, COMMAND_OFF, COMMAND_BLUE, COMMAND_GREEN, COMMAND_RED, CHARACTERISTIC_UUID
     from src import config  # 設定変数をまとめたファイル
 except ImportError as e:
     print(f"エラー: モジュールのインポートに失敗しました。{e}")
@@ -23,6 +27,35 @@ except ImportError as e:
 # キューを使って、最大の長さが30のデータを確実に送る
 # AIの推論がどれだけ遅くなるかわからないし、早いかもしれないので、固定長のキューを使う
 historical_data = deque(maxlen=config.HISTORICAL_DATA_MAXLEN)
+
+
+def run_async_from_sync(coro, wait_for_completion=True):
+    """
+    同期コードから非同期コルーチンを実行するためのヘルパー。
+    メインスレッドがすでにイベントループを持っている可能性があるため、
+    別スレッドで新しいイベントループを起動して実行します。
+    """
+
+    # スレッドで実行するターゲット関数
+    def thread_target():
+        try:
+            # このスレッド専用の新しいイベントループで実行
+            asyncio.run(coro)
+        except Exception as e:
+            print(f"[非同期スレッドのエラー] {e}")
+
+    t = threading.Thread(target=thread_target)
+    t.start()  # スレッドを開始
+
+    if wait_for_completion:
+        # 完了まで待つ (ブロッキング)
+        # 起動時のライト点灯などで使用
+        t.join()
+    else:
+        # 待たずに次に進む (ノンブロッキング)
+        # メインループ内のライト操作などで使用
+        pass
+
 
 # 使うpythonの実行ファイルパスを取得
 # ai.pyをサブプロセスで起動する際に同じPython環境を使うため
@@ -80,9 +113,28 @@ last_ai_trigger_time = 0  # AIを最後に実行した時刻
 # AI_COOLDOWN_SECONDS = config.AI_COOLDOWN_SECONDS  # AIの実行クールダウン（5秒）
 
 
+# ==== ライトを起動 ===
+print(f"--- 起動シーケンス: SwitchBotライトをONにします ... ---")
+try:
+    # 起動時は処理が終わるまで待つ (wait_for_completion=True)
+    run_async_from_sync(
+        control_switchbot_light(
+            LIGHT_MAC_ADDRESS,
+            COMMAND_ON,
+            CHARACTERISTIC_UUID
+        ),
+        wait_for_completion=True  # 起動処理なので完了を待つ
+    )
+    print("--- ライト起動完了 ---")
+except Exception as e:
+    print(f"警告: 起動時のライト制御に失敗しました: {e}")
+    print("（Bluetoothが有効か、MACアドレスが正しいか確認してください）")
+
 # --- Numpy配列をJSONに変換するためのヘルパー関数 ---
 # 顔の68個の点をAIに渡すときに使うかもだけど、今は使ってない
 # それを使えるモデルが見つからない→作らないといけない
+
+
 class NumpyEncoder(json.JSONEncoder):
     """ Numpy配列をJSONシリアライズ可能にするためのクラス """
 
@@ -92,8 +144,27 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+async def my_task():
+    print("--- 外部から「青色」を実行 ---")
+    await control_switchbot_light(
+        LIGHT_MAC_ADDRESS,
+        COMMAND_BLUE,
+        CHARACTERISTIC_UUID
+    )
+
+    await asyncio.sleep(3)
+
+    print("--- 外部から「オフ」を実行 ---")
+    await control_switchbot_light(
+        LIGHT_MAC_ADDRESS,
+        COMMAND_OFF,
+        CHARACTERISTIC_UUID
+    )
+
+
 # 常時回るコード
 while True:
+
     ret, frame = cap.read()
     if not ret:
         print("ストリームが切れました。")
@@ -151,9 +222,38 @@ while True:
                 cv2.putText(display_frame, "STATE 2: Person found. Come closer...",
                             (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
 
+    # 顔を分析・追跡する段階
     elif current_state == config.STATE_ANALYZING_FACE:
         display_frame, face_results = identifier_person.process_frame(
             frame, mode="analyze_only")
+
+        # hash化した情報を受け取り、switch botを操作する
+        changes = check_json_changes(
+            [config.MOVE_MOTORS_JSON_PATH],
+            hash_file=config.SAVE_HASH_DB_PATH
+        )
+        # 変更があったファイルだけ処理する
+        for filepath, content in changes.items():
+            if content == "NoChanges":
+                continue
+
+            if content == "File Not Found":
+                print(f"警告: {filepath} が見つかりません。")
+                continue
+
+            # 変更があった場合,switchbotのライトを操作する
+            # json の値のcolorsを受け取り、ライトを操作する
+            if 'color' in content:
+                color_command = content['color']
+                print(f"--- switchbotライトを {color_command} に変更します ---")
+                # 非同期関数を実行するためにイベントループを使う
+                asyncio.run(control_switchbot_light(
+                    LIGHT_MAC_ADDRESS,
+                    color_command,
+                    CHARACTERISTIC_UUID
+                ))
+            print(f"--- 変更あり: {filepath} ---")
+            print(content)
 
         if len(face_results) > 0:
             # --- 追跡継続中 (ログにMARとYawを表示) ---
