@@ -104,19 +104,19 @@ def send_request_to_raspberry_pi(data, RASPBERRY_PI_IP):
 
 
 if __name__ == "__main__":
-    EV3_COMMAND_TO_SEND = "A:90:50"
+    EV3_COMMAND_TO_SEND = "A:180:50"
+    TEST_IP = "10.27.73.108"  # ここをその日のIPに変えてテストする
 
     data_to_send = {
         # サーバー側（raspi_ev3_gateway.py）が期待するキー名 "ev3_command" を使用
         "ev3_command": EV3_COMMAND_TO_SEND,
         "client_timestamp": time.time()
     }
-    send_request_to_raspberry_pi(data_to_send)
+    send_request_to_raspberry_pi(data_to_send, TEST_IP)
 
     print("--- ev3_commander.py (クラス版) 単体テスト実行 ---")
 
     # --- 単体テスト用の設定 ---
-    TEST_IP = "10.27.75.121"  # ここをその日のIPに変えてテストする
 
     # クラスの「実体（インスタンス）」を作成
     commander_for_test = EV3Commander(TEST_IP)

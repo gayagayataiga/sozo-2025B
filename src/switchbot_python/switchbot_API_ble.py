@@ -1,36 +1,34 @@
-# wifi mac: 94:A9:90:76:E3:AC
-# ble mac: 94:A9:90:76:E3:AE
-import asyncio
 from bleak import BleakClient
+import asyncio
+
 
 # --- 設定 ---
-# あなたのSwitchBotライトのMACアドレスに置き換えてください
 LIGHT_MAC_ADDRESS = "94:A9:90:76:E3:AE"
 
-# SwitchBot Color BulbのGATT通信用UUID
+# 2. SwitchBot Color BulbのGATT通信用UUID (これが正しい)
 CHARACTERISTIC_UUID = "cba20002-224d-11e6-9fb8-0002a5d5c51b"
 
-# ライトの操作コマンドバイト列
-# 点灯（オン）コマンド: [0x57, 0x01, 0x01]
-COMMAND_ON = bytes([0x57, 0x01, 0x01])
+# 3. ライトの操作コマンドバイト列
+# オンコマンド: REQ 0x570f470101
+COMMAND_ON = bytes([0x57, 0x0F, 0x47, 0x01, 0x01])
 
-# 消灯（オフ）コマンド: [0x57, 0x01, 0x02]
-COMMAND_OFF = bytes([0x57, 0x01, 0x02])
+# オフコマンド: REQ 0x570f470102
+COMMAND_OFF = bytes([0x57, 0x0F, 0x47, 0x01, 0x02])
 
-# 明るさ100%設定コマンド（例: 0x05は明るさ設定、0x64は100(0x64)）
-# COMMAND_BRIGHTNESS_100 = bytes([0x57, 0x05, 0x64])
+# 4. 色設定コマンド (新しい拡張コマンド形式)
+# 青色 100% (Type 0x12: Lvl + RGB 変更)
+# コマンド: [0x57, 0x0F, 0x47, 0x01, 0x12, Brightness, R, G, B]
+COMMAND_BLUE = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0x00, 0x00, 0xFF])
 
-# 色設定コマンド
-# コマンド形式: bytes([0x57, 0x01, r,g,b])
-# 赤 (R=255, G=0, B=0)
-COMMAND_RED = bytes([0x57, 0x01, 0x09, 255, 0, 0])
-# 緑 (R=0, G=255, B=0)
-COMMAND_GREEN = bytes([0x57, 0x01, 0x09, 0, 255, 0])
-# 青 (R=0, G=0, B=255)
-COMMAND_BLUE = bytes([0x57, 0x01, 0x09, 0, 0, 255])
+# 緑色 100% (R=0, G=255, B=0)
+COMMAND_GREEN = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0x00, 0xFF, 0x00])
+
+# 赤色 100% (R=255, G=0, B=0)
+COMMAND_RED = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0xFF, 0x00, 0x00])
+
+# --- 実行関数 (変更なし) ---
 
 
-# --- 実行関数 ---
 async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERISTIC_UUID: str):
     """
     SwitchBotライトにBLE経由でコマンドを送信する
@@ -45,6 +43,7 @@ async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERIST
 
                 # キャラクタリスティックにコマンドを書き込む
                 print(f"Writing command: {command.hex()}")
+                # ドキュメントの仕様では応答 (response=True) は必須ではないが、念のため残す
                 await client.write_gatt_char(CHARACTERISTIC_UUID, command, response=True)
                 print("Command sent. Light should respond.")
             else:
@@ -52,50 +51,34 @@ async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERIST
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        # WindowsやLinuxではBLEエラーが起きやすいので、エラーメッセージを出す
         print("💡 エラーが発生した場合、PCのBluetoothがONか、MACアドレスが正しいか確認してください。")
 
 
-# --- メインシーケンス関数 ---
+# --- メインシーケンス関数 (色変更を追加) ---
 async def main_sequence():
-    """
-    ライトを点灯させ、待機後に消灯、さらに待機後に再点灯し、最後に色を変更する一連の動作
-    """
 
-    # 1. 初期点灯
+    # 1. 初期点灯 (コマンド変更)
     print("--- 1. 初期点灯を実行 ---")
     await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_ON, CHARACTERISTIC_UUID)
-
-    # 2. 1秒待機
-    print("\n--- 1秒間待機 ---")
-    await asyncio.sleep(1)
-
-    # 3. 消灯
-    print("\n--- 3. 消灯を実行 ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_OFF, CHARACTERISTIC_UUID)
-
-    # 4. 1秒待機
-    print("\n--- 4. 1秒間待機 ---")
-    await asyncio.sleep(1)
-
-    # 5. 再点灯
-    print("\n--- 5. 再点灯を実行 ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_ON, CHARACTERISTIC_UUID)
-
-    # 6. 2秒待機
-    print("\n--- 2秒間待機 ---")
     await asyncio.sleep(2)
 
-    # 7. 青色に変更
-    print("\n--- 7. 青色に変更を実行 ---")
+    # 2. 青色に変更 (コマンド変更)
+    print("\n--- 2. 青色に変更を実行 (新形式) ---")
     await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_BLUE, CHARACTERISTIC_UUID)
+    await asyncio.sleep(2)
 
-    # 8. 緑色に変更
-    print("\n--- 8. 緑色に変更を実行 ---")
+    # 3. 緑色に変更 (コマンド変更)
+    print("\n--- 3. 緑色に変更を実行 (新形式) ---")
     await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_GREEN, CHARACTERISTIC_UUID)
+    await asyncio.sleep(2)
 
-    # 9. 消灯 (シーケンスの終了として)
-    print("\n--- 9. 消灯を実行 (シーケンス終了) ---")
+    # 4. 赤色に変更 (コマンド追加)
+    print("\n--- 4. 赤色に変更を実行 (新形式) ---")
+    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_RED, CHARACTERISTIC_UUID)
+    await asyncio.sleep(2)
+
+    # 5. 消灯 (コマンド変更)
+    print("\n--- 5. 消灯を実行 (シーケンス終了) ---")
     await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_OFF, CHARACTERISTIC_UUID)
 
 
