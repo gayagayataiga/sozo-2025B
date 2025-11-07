@@ -29,7 +29,7 @@ except ImportError as e:
 historical_data = deque(maxlen=config.HISTORICAL_DATA_MAXLEN)
 
 
-def run_async_from_sync(coro, wait_for_completion=True):
+def run_async_from_sync(coro, wait_for_completion=False):
     """
     同期コードから非同期コルーチンを実行するためのヘルパー。
     メインスレッドがすでにイベントループを持っている可能性があるため、
@@ -116,14 +116,14 @@ last_ai_trigger_time = 0  # AIを最後に実行した時刻
 # ==== ライトを起動 ===
 print(f"--- 起動シーケンス: SwitchBotライトをONにします ... ---")
 try:
-    # 起動時は処理が終わるまで待つ (wait_for_completion=True)
+    # 起動時は処理が終わるまで待つという方法もあり (wait_for_completion=True)
     run_async_from_sync(
         control_switchbot_light(
             LIGHT_MAC_ADDRESS,
             COMMAND_ON,
             CHARACTERISTIC_UUID
         ),
-        wait_for_completion=True  # 起動処理なので完了を待つ
+        wait_for_completion=False
     )
     print("--- ライト起動完了 ---")
 except Exception as e:
@@ -247,11 +247,14 @@ while True:
                 color_command = content['color']
                 print(f"--- switchbotライトを {color_command} に変更します ---")
                 # 非同期関数を実行するためにイベントループを使う
-                asyncio.run(control_switchbot_light(
-                    LIGHT_MAC_ADDRESS,
-                    color_command,
-                    CHARACTERISTIC_UUID
-                ))
+                run_async_from_sync(
+                    control_switchbot_light(
+                        LIGHT_MAC_ADDRESS,
+                        color_command,
+                        CHARACTERISTIC_UUID
+                    ),
+                    wait_for_completion=False
+                )
             print(f"--- 変更あり: {filepath} ---")
             print(content)
 

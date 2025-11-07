@@ -44,7 +44,7 @@ async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERIST
                 # キャラクタリスティックにコマンドを書き込む
                 print(f"Writing command: {command.hex()}")
                 # ドキュメントの仕様では応答 (response=True) は必須ではないが、念のため残す
-                await client.write_gatt_char(CHARACTERISTIC_UUID, command, response=True)
+                await client.write_gatt_char(CHARACTERISTIC_UUID, command, response=False)
                 print("Command sent. Light should respond.")
             else:
                 print("Failed to connect.")
