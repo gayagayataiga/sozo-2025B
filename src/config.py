@@ -54,16 +54,16 @@ YAW_THRESHOLD = 15.0
 
 # --- ファイル名定義 ---
 # メインプロセス -> AIプロセスへ渡すデータファイル
-AI_INPUT_FILENAME = 'ai_input.json'
+AI_INPUT_FILENAME = 'data/ai_input.json'
 
 # AIプロセス -> メインプロセスへ返す結果ファイル
-AI_RESULT_FILENAME = 'ai_result.json'
+AI_RESULT_FILENAME = 'data/ai_result.json'
 
 # AIプロセスの実行ログファイル
-AI_LOG_FILENAME = 'ai_log.txt'
+AI_LOG_FILENAME = 'data/ai_log.txt'
 
 # サーバー(Web UI)と共有するデータファイル
-SHARED_DATA_FILENAME = 'data.json'
+SHARED_DATA_FILENAME = 'data/data.json'
 
 # AI (サブプロセス) のスクリプト名
 AI_SCRIPT_FILENAME = 'ai.py'
