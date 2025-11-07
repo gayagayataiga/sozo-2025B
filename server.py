@@ -7,7 +7,7 @@ import re
 import socket
 import json
 import os
-from src import config  # 追加: config.py から設定をインポート
+from src import config
 
 # MOVE_MOTORS_JSON_PATH = config.MOVE_MOTORS_JSON_PATH
 file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
@@ -116,13 +116,12 @@ def handle_control():
             # "rgb(255, 100, 20)" から数値だけを取り出す
             r, g, b = map(int, re.findall(r'\d+', value))
             print(f"--- R={r}, G={g}, B={b} として処理 ---")
-            # (ここに実際のロボットのRGB制御コードを書く)
+
+            color_data = {'r': r, 'g': g, 'b': b}
+            update_motor_state('color', color_data)
+
         except Exception as e:
             print(f"色の値の解析に失敗: {e}")
-
-    # elif action == config.ELBOW_MOVE_COMMAND:
-    #     # アームを動かす処理
-    #     print(f"--- アームを {value} に動かします ---")
 
     elif action == config.ELBOW_MOVE_COMMAND:
         try:

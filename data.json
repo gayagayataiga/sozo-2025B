@@ -1,19 +1,19 @@
 {
-    "ai_analysis": {
-        "status": "error_colab_failed",
-        "analysis": {
-            "is_sleeping": false,
-            "concentration": "Unknown"
-        },
-        "debug_info": {
-            "error": "Failed to get analysis from Colab server."
-        },
-        "local_run_id": "efafb3da-3470-4445-862d-54bf9f96df2e",
-        "processing_timestamp": 1762168678.483563,
-        "input_summary": {
-            "name": "Unknown_2",
-            "latest_ear": 0.28706907447146157,
-            "latest_mar": 0.046296296296296294
-        }
-    }
+	"ai_analysis": {
+		"status": "error_colab_failed",
+		"analysis": {
+			"is_sleeping": false,
+			"concentration": "Hard"
+		},
+		"debug_info": {
+			"error": "Failed to get analysis from Colab server."
+		},
+		"local_run_id": "efafb3da-3470-4445-862d-54bf9f96df2e",
+		"processing_timestamp": 1762168678.483563,
+		"input_summary": {
+			"name": "Unknown_2",
+			"latest_ear": 0.28706907447146157,
+			"latest_mar": 0.046296296296296294
+		}
+	}
 }
