@@ -26,9 +26,8 @@ COMMAND_GREEN = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0x00, 0xFF, 0x00])
 # 赤色 100% (R=255, G=0, B=0)
 COMMAND_RED = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0xFF, 0x00, 0x00])
 
+
 # --- 実行関数 (変更なし) ---
-
-
 async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERISTIC_UUID: str):
     """
     SwitchBotライトにBLE経由でコマンドを送信する

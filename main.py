@@ -144,24 +144,6 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-async def my_task():
-    print("--- 外部から「青色」を実行 ---")
-    await control_switchbot_light(
-        LIGHT_MAC_ADDRESS,
-        COMMAND_BLUE,
-        CHARACTERISTIC_UUID
-    )
-
-    await asyncio.sleep(3)
-
-    print("--- 外部から「オフ」を実行 ---")
-    await control_switchbot_light(
-        LIGHT_MAC_ADDRESS,
-        COMMAND_OFF,
-        CHARACTERISTIC_UUID
-    )
-
-
 # 常時回るコード
 while True:
 
@@ -244,19 +226,35 @@ while True:
             # 変更があった場合,switchbotのライトを操作する
             # json の値のcolorsを受け取り、ライトを操作する
             if 'color' in content:
-                color_command = content['color']
-                print(f"--- switchbotライトを {color_command} に変更します ---")
-                # 非同期関数を実行するためにイベントループを使う
-                run_async_from_sync(
-                    control_switchbot_light(
-                        LIGHT_MAC_ADDRESS,
-                        color_command,
-                        CHARACTERISTIC_UUID
-                    ),
-                    wait_for_completion=False
-                )
-            print(f"--- 変更あり: {filepath} ---")
-            print(content)
+                color_dict = content['color']
+                if 'r' in color_dict and 'g' in color_dict and 'b' in color_dict:
+                    r = color_dict['r']
+                    g = color_dict['g']
+                    b = color_dict['b']
+                    brightness = 100  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+
+                    #  辞書をSwitchBot用のbytesコマンドに変換
+                    color_command_bytes = bytes([
+                        0x57, 0x0F, 0x47, 0x01, 0x12,
+                        brightness,
+                        r,
+                        g,
+                        b
+                    ])
+
+                    print(f"--- switchbotライトを RGB({r},{g},{b}) に変更します ---")
+
+                    # run_async_from_sync を使う (asyncio.run ではない)
+                    run_async_from_sync(
+                        control_switchbot_light(
+                            LIGHT_MAC_ADDRESS,
+                            color_command_bytes,  # <-- 変換後の bytes を渡す
+                            CHARACTERISTIC_UUID
+                        ),
+                        wait_for_completion=False  # メインループを止めない
+                    )
+            else:
+                print(f"--- 色コマンドの形式が不正です: {color_dict} ---")
 
         if len(face_results) > 0:
             # --- 追跡継続中 (ログにMARとYawを表示) ---
