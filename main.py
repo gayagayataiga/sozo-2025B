@@ -223,6 +223,36 @@ while True:
                 print(f"警告: {filepath} が見つかりません。")
                 continue
 
+            # モータの方を角度制御する
+            if 'elbow' in content:
+                # content['elbow'] に "A:180:50" のような文字列が入っていると想定
+                command_string = content['elbow']
+
+                print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                # EV3Commanderの仕様に合わせる
+                command_string = "A:"+str(command_string)+":50"
+
+                # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                data_to_send = {
+                    "ev3_command": command_string,  # サーバー側が期待するキー名
+                    "client_timestamp": time.time()
+                }
+            if 'wrist' in content:
+                # content['wrist'] に "A:180:50" のような文字列が入っていると想定
+                command_string = content['wrist']
+
+                print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                # EV3Commanderの仕様に合わせる
+                command_string = "B:"+str(command_string)+":50"
+
+                # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                data_to_send = {
+                    "ev3_command": command_string,  # サーバー側が期待するキー名
+                    "client_timestamp": time.time()
+                }
+
+                # send_request メソッドを呼び出す
+                ev3_communicator.send_request(data_to_send)
             # 変更があった場合,switchbotのライトを操作する
             # json の値のcolorsを受け取り、ライトを操作する
             if 'color' in content:
@@ -231,7 +261,7 @@ while True:
                     r = color_dict['r']
                     g = color_dict['g']
                     b = color_dict['b']
-                    brightness = 100  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+                    brightness = 10  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
 
                     #  辞書をSwitchBot用のbytesコマンドに変換
                     color_command_bytes = bytes([
@@ -354,7 +384,7 @@ while True:
             print("[S3 -> S1] 顔の追跡をロスト。上半身から探索を再開します。")
             current_state = config.STATE_SEARCHING_BODY
 
-    time.sleep(0.3)  # ファイル削除の小さな遅延
+    time.sleep(0.01)  # ファイル削除の小さな遅延
 
     result_file = config.AI_RESULT_FILENAME
     if os.path.exists(result_file):

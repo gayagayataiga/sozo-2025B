@@ -105,7 +105,7 @@ def send_request_to_raspberry_pi(data, RASPBERRY_PI_IP):
 
 if __name__ == "__main__":
     EV3_COMMAND_TO_SEND = "A:180:50"
-    TEST_IP = "10.27.73.108"  # ここをその日のIPに変えてテストする
+    TEST_IP = "10.27.72.135"  # ここをその日のIPに変えてテストする
 
     data_to_send = {
         # サーバー側（raspi_ev3_gateway.py）が期待するキー名 "ev3_command" を使用
