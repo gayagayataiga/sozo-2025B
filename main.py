@@ -261,7 +261,7 @@ while True:
                     r = color_dict['r']
                     g = color_dict['g']
                     b = color_dict['b']
-                    brightness = 10  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+                    brightness = 5  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
 
                     #  辞書をSwitchBot用のbytesコマンドに変換
                     color_command_bytes = bytes([

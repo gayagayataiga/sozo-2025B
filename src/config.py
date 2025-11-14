@@ -9,10 +9,10 @@ PYTHON_EXECUTABLE = sys.executable
 
 # --- ネットワーク設定 (Raspberry Pi / EV3) ---
 # ラズベリーパイのIPアドレス (環境に合わせて変更)
-RASPBERRY_PI_IP = "10.27.72.135"
+RASPBERRY_PI_IP = "127.0.0.1"
 
 # 映像ストリームのポートとパス
-STREAM_PORT = 5001
+STREAM_PORT = 5000
 STREAM_PATH = "/video_feed"
 STREAM_URL = f'http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}'
 # 構築されるURL: f"http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}"
