@@ -9,10 +9,10 @@ PYTHON_EXECUTABLE = sys.executable
 
 # --- ネットワーク設定 (Raspberry Pi / EV3) ---
 # ラズベリーパイのIPアドレス (環境に合わせて変更)
-RASPBERRY_PI_IP = "127.0.0.1"
+RASPBERRY_PI_IP = "10.27.74.138"
 
 # 映像ストリームのポートとパス
-STREAM_PORT = 5000
+STREAM_PORT = 5001
 STREAM_PATH = "/video_feed"
 STREAM_URL = f'http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}'
 # 構築されるURL: f"http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}"
@@ -133,3 +133,7 @@ AI_ANALYSIS_ERROR_VALUE = 'Unknown'
 
 # aiの分析結果内の睡眠状態のキー
 AI_SLEEPING_KEY = 'is_sleeping'
+
+# 最初のモーター角
+INITIAL_ELBOW_ANGLE = 90
+INITIAL_WRIST_ANGLE = 45

@@ -28,6 +28,9 @@ except ImportError as e:
 # AIの推論がどれだけ遅くなるかわからないし、早いかもしれないので、固定長のキューを使う
 historical_data = deque(maxlen=config.HISTORICAL_DATA_MAXLEN)
 
+premorters = {"elbow": config.INITIAL_ELBOW_ANGLE,
+              "wrist": config.INITIAL_WRIST_ANGLE}
+
 
 def run_async_from_sync(coro, wait_for_completion=False):
     """
@@ -227,32 +230,38 @@ while True:
             if 'elbow' in content:
                 # content['elbow'] に "A:180:50" のような文字列が入っていると想定
                 command_string = content['elbow']
+                if content['elbow'] != premorters['elbow']:
+                    premorters['elbow'] = content['elbow']
 
-                print(f"--- EV3にコマンドを送信します: {command_string} ---")
-                # EV3Commanderの仕様に合わせる
-                command_string = "A:"+str(command_string)+":50"
+                    print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                    # EV3Commanderの仕様に合わせる
+                    command_string = "A:"+str(command_string)+":50"
 
-                # EV3Commanderの send_request メソッドが要求する辞書形式を作成
-                data_to_send = {
-                    "ev3_command": command_string,  # サーバー側が期待するキー名
-                    "client_timestamp": time.time()
-                }
+                    # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                    data_to_send = {
+                        "ev3_command": command_string,  # サーバー側が期待するキー名
+                        "client_timestamp": time.time()
+                    }
+                    ev3_communicator.send_request(data_to_send)
             if 'wrist' in content:
                 # content['wrist'] に "A:180:50" のような文字列が入っていると想定
                 command_string = content['wrist']
+                if content['wrist'] != premorters['wrist']:
+                    premorters['wrist'] = content['wrist']
 
-                print(f"--- EV3にコマンドを送信します: {command_string} ---")
-                # EV3Commanderの仕様に合わせる
-                command_string = "B:"+str(command_string)+":50"
+                    print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                    # EV3Commanderの仕様に合わせる
+                    command_string = "B:"+str(command_string)+":50"
 
-                # EV3Commanderの send_request メソッドが要求する辞書形式を作成
-                data_to_send = {
-                    "ev3_command": command_string,  # サーバー側が期待するキー名
-                    "client_timestamp": time.time()
-                }
+                    # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                    data_to_send = {
+                        "ev3_command": command_string,  # サーバー側が期待するキー名
+                        "client_timestamp": time.time()
+                    }
+                    # send_request メソッドを呼び出す
 
-                # send_request メソッドを呼び出す
-                ev3_communicator.send_request(data_to_send)
+                    ev3_communicator.send_request(data_to_send)
+
             # 変更があった場合,switchbotのライトを操作する
             # json の値のcolorsを受け取り、ライトを操作する
             if 'color' in content:
@@ -408,6 +417,7 @@ while True:
 
             # AIデータを 'ai_analysis' キーとして更新
             shared_data['ai_analysis'] = ai_data
+            shared_data['user_name'] = name
 
             # data.json に書き戻す
             with open(config.SHARED_DATA_FILENAME, 'w') as f:
