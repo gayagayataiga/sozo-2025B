@@ -11,10 +11,10 @@
 // --- ロボットの動作を定義する定数 ---
 
 // 肘 (Arm)
-export const ANGLE_HOME = 90;
+export const ANGLE_HOME = 20;
 export const ANGLE_STEP = 10;
-export const ANGLE_MIN = 70;
-export const ANGLE_MAX = 100;
+export const ANGLE_MIN = 0;
+export const ANGLE_MAX = 30;
 
 // 手首 (Wrist)
 export const WRIST_ANGLE_HOME = 45;

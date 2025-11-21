@@ -1,6 +1,7 @@
 {
     "wrist": 50,
-    "elbow": 80,
+    "elbow": 10,
+    "shoulder": 0,
     "color": {
         "r": 56,
         "g": 204,

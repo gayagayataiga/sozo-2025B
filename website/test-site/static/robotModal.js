@@ -55,10 +55,10 @@ const robotStatusImage = document.getElementById('robot-status-image');
 // --- 画像の対応表 ---
 // (※このファイルが管理する肘の角度と画像のマップ)
 const ARM_IMAGE_MAP = {
-	70: '../static/photo/arm.jpg',
-	80: '../static/photo/arm - コピー.jpg',
-	90: '../static/photo/arm - コピー (2).jpg',
-	100: '../static/photo/arm - コピー (3).jpg',
+	0: '../static/photo/arm.jpg',
+	10: '../static/photo/arm - コピー.jpg',
+	20: '../static/photo/arm - コピー (2).jpg',
+	30: '../static/photo/arm - コピー (3).jpg',
 };
 
 // ------------------------------------------------------------------

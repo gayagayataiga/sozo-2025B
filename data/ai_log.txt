@@ -1,6 +1,6 @@
 Successfully imported requests.
 --- ai.py started ---
 Python Executable: C:\Users\sd23099\Desktop\mine 11-18\souzou\sozo-2025B\sozo\Scripts\python.exe
-Run ID: 02b1ded5-760e-40a3-8a70-964a3ba463a1
+Run ID: 017c80fa-cc78-4267-9f64-122a449408d3
 ---  FATAL: Input file not found: ai_input.json ---
 --- ai.py finished ---

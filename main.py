@@ -29,7 +29,8 @@ except ImportError as e:
 historical_data = deque(maxlen=config.HISTORICAL_DATA_MAXLEN)
 
 premorters = {"elbow": config.INITIAL_ELBOW_ANGLE,
-              "wrist": config.INITIAL_WRIST_ANGLE}
+              "wrist": config.INITIAL_WRIST_ANGLE,
+              "shoulder": config.INITIAL_SHOULDER_ANGLE}
 
 
 def run_async_from_sync(coro, wait_for_completion=False):
@@ -243,6 +244,7 @@ while True:
                         "client_timestamp": time.time()
                     }
                     ev3_communicator.send_request(data_to_send)
+
             if 'wrist' in content:
                 # content['wrist'] に "A:180:50" のような文字列が入っていると想定
                 command_string = content['wrist']
@@ -259,7 +261,24 @@ while True:
                         "client_timestamp": time.time()
                     }
                     # send_request メソッドを呼び出す
+                    ev3_communicator.send_request(data_to_send)
 
+            if 'shoulder' in content:
+                # content['shoulder'] に "A:180:50" のような文字列が入っていると想定
+                command_string = content['shoulder']
+                if content['shoulder'] != premorters['shoulder']:
+                    premorters['shoulder'] = content['shoulder']
+
+                    print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                    # EV3Commanderの仕様に合わせる
+                    command_string = "C:"+str(command_string)+":50"
+
+                    # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                    data_to_send = {
+                        "ev3_command": command_string,  # サーバー側が期待するキー名
+                        "client_timestamp": time.time()
+                    }
+                    # send_request メソッドを呼び出す
                     ev3_communicator.send_request(data_to_send)
 
             # 変更があった場合,switchbotのライトを操作する
