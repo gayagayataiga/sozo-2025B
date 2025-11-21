@@ -12,7 +12,7 @@ class EV3Commander:
     ラズパイ上のEV3制御サーバーと通信するためのクライアントクラス
     """
 
-    def __init__(self, raspberry_pi_ip, port=5000, endpoint_path="/api/control_ev3", timeout_sec=10.0):
+    def __init__(self, raspberry_pi_ip, port=5002, endpoint_path="/api/control_ev3", timeout_sec=10.0):
         """
         EV3Commanderを初期化します。
 
