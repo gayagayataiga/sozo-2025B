@@ -229,14 +229,15 @@ while True:
 
             # モータの方を角度制御する
             if 'elbow' in content:
-                # content['elbow'] に "A:180:50" のような文字列が入っていると想定
+                # content['elbow'] に "A:180:30" のような文字列が入っていると想定
                 command_string = content['elbow']
                 if content['elbow'] != premorters['elbow']:
-                    premorters['elbow'] = content['elbow']
 
                     print(f"--- EV3にコマンドを送信します: {command_string} ---")
                     # EV3Commanderの仕様に合わせる
-                    command_string = "A:"+str(command_string)+":50"
+                    command_string = "A:" + \
+                        str(-command_string+premorters['elbow'])+":30"
+                    premorters['elbow'] = content['elbow']
 
                     # EV3Commanderの send_request メソッドが要求する辞書形式を作成
                     data_to_send = {
@@ -246,14 +247,15 @@ while True:
                     ev3_communicator.send_request(data_to_send)
 
             if 'wrist' in content:
-                # content['wrist'] に "A:180:50" のような文字列が入っていると想定
+                # content['wrist'] に "A:180:30" のような文字列が入っていると想定
                 command_string = content['wrist']
                 if content['wrist'] != premorters['wrist']:
-                    premorters['wrist'] = content['wrist']
 
                     print(f"--- EV3にコマンドを送信します: {command_string} ---")
                     # EV3Commanderの仕様に合わせる
-                    command_string = "B:"+str(command_string)+":50"
+                    command_string = "B:" + \
+                        str(-command_string+premorters['wrist'])+":30"
+                    premorters['wrist'] = content['wrist']
 
                     # EV3Commanderの send_request メソッドが要求する辞書形式を作成
                     data_to_send = {
@@ -264,14 +266,15 @@ while True:
                     ev3_communicator.send_request(data_to_send)
 
             if 'shoulder' in content:
-                # content['shoulder'] に "A:180:50" のような文字列が入っていると想定
+                # content['shoulder'] に "A:180:30" のような文字列が入っていると想定
                 command_string = content['shoulder']
                 if content['shoulder'] != premorters['shoulder']:
-                    premorters['shoulder'] = content['shoulder']
 
                     print(f"--- EV3にコマンドを送信します: {command_string} ---")
                     # EV3Commanderの仕様に合わせる
-                    command_string = "C:"+str(command_string)+":50"
+                    command_string = "C:" + \
+                        str(-command_string+premorters['shoulder'])+":30"
+                    premorters['shoulder'] = content['shoulder']
 
                     # EV3Commanderの send_request メソッドが要求する辞書形式を作成
                     data_to_send = {
@@ -289,7 +292,8 @@ while True:
                     r = color_dict['r']
                     g = color_dict['g']
                     b = color_dict['b']
-                    brightness = 5  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+                    # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+                    brightness = content["brightness"]
 
                     #  辞書をSwitchBot用のbytesコマンドに変換
                     color_command_bytes = bytes([

@@ -1,10 +1,11 @@
 {
     "wrist": 50,
-    "elbow": 10,
+    "elbow": 30,
     "shoulder": 0,
     "color": {
-        "r": 56,
-        "g": 204,
-        "b": 135
-    }
+        "r": 235,
+        "g": 42,
+        "b": 124
+    },
+    "brightness": 5
 }

@@ -105,6 +105,11 @@ def handle_control():
         # 明るさ変更の処理 (value は 0〜100 の数値)
         print(f"--- 明るさを {value} にします ---")
         # (ここに実際のロボットの明るさ制御コードを書く)
+        try:
+            brightness = int(value)
+            update_motor_state('brightness', brightness)
+        except ValueError:
+            print(f"[エラー] 明るさの値が数値ではありません: {value}")
 
     elif action == config.COLOR_WHEEL_COMMAND:
         #  新しく追加した色相環の処理
