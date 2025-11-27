@@ -73,6 +73,13 @@ SHARED_DATA_FILENAME = 'data/data.json'
 # AI (サブプロセス) のスクリプト名
 AI_SCRIPT_FILENAME = 'ai.py'
 
+# --- データベース設定 ---
+# SQLiteデータベースファイル名
+DB_NAME = 'data/study_logs.db'
+# データベースをいじるpythonファイル
+DB_MANAGE_SCRIPT = 'dbwithpython/managedb.py'
+
+
 # --- その他 ---
 # ファイルI/O（入出力）の競合を避けるための小さな遅延 (秒)
 FILE_OPERATION_DELAY_SHORT = 0.3
@@ -112,6 +119,9 @@ ELBOW_MOVE_COMMAND = 'set_angle_elbow'
 
 # 手首を動かす命令の判別
 WRIST_MOVE_COMMAND = 'set_angle_wrist'
+
+# 肩を動かす命令の判別
+SHOULDER_MOVE_COMMAND = 'set_angle_shoulder'
 
 # ブラウザから送られてくるactionのjsonキー
 ACTION_KEY = 'action'

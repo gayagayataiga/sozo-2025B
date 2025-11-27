@@ -148,6 +148,15 @@ def handle_control():
         except ValueError:
             print(f"[エラー] 手首の角度の値が数値ではありません: {value}")
 
+    elif action == config.SHOULDER_MOVE_COMMAND:
+        try:
+            angle = int(value)
+            print(f"--- 肩の角度を {angle} 度に設定します ---")
+            # JSONファイルに書き込む
+            update_motor_state('shoulder', angle)  # 'shoulder' は main.py が読むキー
+        except ValueError:
+            print(f"[エラー] 肩の角度の値が数値ではありません: {value}")
+
     else:
         # 未知のアクション
         print(f"--- 未知のアクション {action} です ---")

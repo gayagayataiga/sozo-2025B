@@ -77,6 +77,12 @@ socket.on('status_update', (data) => {
 		concentrationDisplay.textContent = level;
 	}
 
+	const nameElement = document.getElementById('username-display');
+	if (nameElement) {
+		// データに username が入っていれば表示、なければ 'ゲスト'
+		nameElement.textContent = data.username || 'ゲスト';
+	}
+
 	// (animation.js に関連するロジックはここには含めない)
 });
 
