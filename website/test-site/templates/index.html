@@ -48,24 +48,32 @@
 	<div id="robot-move-modal" class="hidden">
 		<div class="modal-content">
 			<h2>ロボット操作リモコン</h2>
-			<div class="robot-status-visual">
+			<!-- <div class="robot-status-visual">
 				<img id="robot-status-image" src="../static/photo/arm.jpg" alt="ロボットの現在の状態">
-			</div>
+			</div> -->
 			<p>スライダーでアームの角度を調整します。</p>
 			<div id="arm-controls">
 				<div class="control-group">
 					<h3>肘 <span id="arm-value-display">90</span>°</h3>
 					<div class="slider-wrapper">
-						<input type="range" id="arm-slider" class="robot-slider" min="0" max="180" value="90" step="1">
+						<input type="range" id="arm-slider" class="robot-slider" min="50" max="130" value="90" step="1">
 						<button id="arm-home" class="home-btn" title="初期位置へ">●</button>
 					</div>
 				</div>
 				<div class="control-group">
 					<h3>手首 <span id="wrist-value-display">0</span>°</h3>
 					<div class="slider-wrapper">
-						<input type="range" id="wrist-slider" class="robot-slider" min="-90" max="90" value="0"
+						<input type="range" id="wrist-slider" class="robot-slider" min="-30" max="30" value="0"
 							step="5">
 						<button id="wrist-home" class="home-btn" title="初期位置へ">●</button>
+					</div>
+				</div>
+				<div class="control-group">
+					<h3>肩 <span id="shoulder-value-display">0</span>°</h3>
+					<div class="slider-wrapper">
+						<input type="range" id="shoulder-slider" class="robot-slider" min="-20" max="20" value="0"
+							step="5">
+						<button id="shoulder-home" class="home-btn" title="初期位置へ">●</button>
 					</div>
 				</div>
 			</div>

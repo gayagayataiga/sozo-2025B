@@ -185,6 +185,8 @@ def send_status_updates():
                             config.AI_CONCENTRATION_KEY, config.AI_ANALYSIS_ERROR_VALUE)
                         is_sleeping_now = analysis_results.get(
                             config.AI_SLEEPING_KEY, False)  # 睡眠状態も取得
+                        username = shared_data.get(
+                            config.USERNAME_KEY, "Unknown User")
 
                     except json.JSONDecodeError:
                         print(
@@ -201,7 +203,8 @@ def send_status_updates():
                 #  JavaScript側が期待するキー名に合わせる
                 'concentration_level': current_concentration,
                 'is_sleeping': is_sleeping_now,  # 睡眠状態も追加
-                'timestamp': timestamp
+                'timestamp': timestamp,
+                "username": username
             }
 
             #  'status_update' イベントで送信

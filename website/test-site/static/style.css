@@ -657,47 +657,162 @@ button {
 } */
 
 /* ロボットモーダル内の操作ボタンエリア */
-#arm-controls {
+/* #arm-controls {
 	display: flex;
-	/* 2つのグループを横に並べる */
 	justify-content: space-around;
-	/* グループ間に均等にスペースを空ける */
 	width: 100%;
 	margin-top: 20px;
-}
+} */
 
 /* 各操作グループ (アーム操作 / 別モータ) */
-.control-group {
+/* .control-group {
 	display: flex;
 	flex-direction: column;
-	/* ボタンを縦に並べる */
 	align-items: center;
-	/* ボタンを中央揃えにする */
 }
 
-/* (見出しの文字色。背景が暗い(#333など)場合は #fff にしてください) */
 .control-group h3 {
 	color: #fff;
 	margin-bottom: 10px;
 }
 
-/* 操作ボタン (▲ ● ▼) */
 .control-button {
 	font-size: 24px;
-	/* 記号のフォントサイズを大きく */
 	line-height: 1;
-	/* 記号の縦位置を中央に */
 	padding: 15px 25px;
 	margin: 5px 0;
 	width: 100px;
-	/* ボタンの幅を統一 */
 
-	/* (既存のボタンスタイルに合わせて調整してください) */
 	background-color: #f0f0f0;
 	color: #333;
 	border: none;
 	border-radius: 8px;
 	cursor: pointer;
+} */
+
+/* --- ロボットモーダル内の固有スタイル (追記) --- */
+
+/* ロボットモーダル内の操作エリア */
+#arm-controls {
+	display: flex;
+	flex-direction: column;
+	/* 上下にグループを並べる */
+	gap: 10px;
+	/* 肘と手首の間隔を広げる */
+	width: 100%;
+	margin-top: 20px;
+}
+
+/* 各操作グループ（肘・手首） */
+.control-group {
+	background-color: #2c2c44;
+	/* 背景色（少し明るくして区分け） */
+	padding: 15px;
+	border-radius: 10px;
+	width: 100%;
+	box-sizing: border-box;
+	/* paddingを含めた幅計算 */
+}
+
+/* 見出し（肘 90° など） */
+.control-group h3 {
+	color: #fff;
+	margin: 0 0 15px 0;
+	/* 下に余白 */
+	font-size: 1.2em;
+	border-bottom: none;
+	/* 既存の線を消す */
+	text-align: left;
+	/* 左寄せ */
+	padding-bottom: 0;
+}
+
+/* ★ここからスライダー用に追加・変更したクラス★ */
+
+/* スライダーとホームボタンを横並びにする枠 */
+.slider-wrapper {
+	display: flex;
+	align-items: center;
+	/* 垂直方向中央揃え */
+	gap: 15px;
+	/* スライダーとボタンの隙間 */
+}
+
+/* スライダー本体のデザイン（既存の明るさスライダーに合わせる） */
+.robot-slider {
+	flex-grow: 1;
+	/* 横幅いっぱいに伸ばす */
+	-webkit-appearance: none;
+	appearance: none;
+	height: 10px;
+	/* 太さ */
+	background: #555577;
+	/* 背景色 */
+	border-radius: 5px;
+	outline: none;
+	cursor: pointer;
+}
+
+/* スライダーのツマミ部分（Chrome/Safari） */
+.robot-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 24px;
+	/* ツマミの大きさ */
+	height: 24px;
+	background: #0088ff;
+	/* 青色 */
+	border: 3px solid #fff;
+	/* 白い縁取り */
+	border-radius: 50%;
+	cursor: pointer;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* スライダーのツマミ部分（Firefox） */
+.robot-slider::-moz-range-thumb {
+	width: 24px;
+	height: 24px;
+	background: #0088ff;
+	border: 3px solid #fff;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+/* ホームボタン（●）のデザイン */
+.home-btn {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	/* まん丸にする */
+	background-color: #444;
+	/* ダークグレー */
+	color: #fff;
+	font-size: 1.2em;
+	border: 2px solid #666;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: background 0.3s;
+	flex-shrink: 0;
+	/* ボタンが潰れないようにする */
+}
+
+.home-btn:hover {
+	background-color: #666;
+	/* ホバー時に少し明るく */
+	border-color: #888;
+}
+
+/* 数値表示用のspan */
+#arm-value-display,
+#wrist-value-display,
+#shoulder-value-display {
+	color: #0088ff;
+	/* 数字だけ青色にして目立たせる */
+	font-weight: bold;
+	margin-left: 10px;
 }
 
 .control-button:hover {

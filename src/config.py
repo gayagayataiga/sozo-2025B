@@ -134,6 +134,9 @@ AI_ANALYSIS_ERROR_VALUE = 'Unknown'
 # aiの分析結果内の睡眠状態のキー
 AI_SLEEPING_KEY = 'is_sleeping'
 
+# webサイトから送られてくるユーザー名のキー
+USERNAME_KEY = 'username'
+
 # 最初のモーター角
 INITIAL_ELBOW_ANGLE = 90
 INITIAL_WRIST_ANGLE = 45
