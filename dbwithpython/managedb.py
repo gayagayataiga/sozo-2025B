@@ -107,9 +107,8 @@ def add_detailed_log(data):
     conn.close()
     print(f"詳細ログ保存完了: {data['username']} - {now}")
 
+
 # --- 実行テスト ---
-
-
 if __name__ == "__main__":
     init_db()
 

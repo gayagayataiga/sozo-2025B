@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import socket
-from ev3dev2.motor import LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, OUTPUT_C, SpeedPercent
+from ev3dev2.motor import LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, SpeedPercent
 import sys
 
 # --- Motor A Setup (LargeMotor) ---
@@ -22,14 +22,6 @@ except Exception as e:
     print(e, file=sys.stderr)
     sys.exit(1)
 
-# --- Motor C Setup (MediumMotor) ---
-try:
-    motor_C = LargeMotor(OUTPUT_C)
-    print("Motor C (Medium) initialized on port C.")
-except Exception as e:
-    print("Error: Motor not connected to port C.", file=sys.stderr)
-    print(e, file=sys.stderr)
-    sys.exit(1)
 
 # --- Server Configuration ---
 HOST = '0.0.0.0'
@@ -46,7 +38,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             with conn:
                 print("Connected by", addr)
                 print(
-                    "Use commands like 'A:90:50', 'B:-45:30','C:-30:30', 'A:stop', 'stop_all', 'shutdown'")
+                    "Use commands like 'A:90:50', 'B:-45:30', 'A:stop', 'stop_all', 'shutdown'")
                 while True:
                     data = conn.recv(1024)
                     if not data:
@@ -64,14 +56,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     if command == "stop_all":
                         motor_A.off()
                         motor_B.off()
-                        motor_C.off()
                         print("Stopping all motors.")
 
                     elif command == "shutdown":
                         print("Shutdown command received. Exiting.")
                         motor_A.off()
                         motor_B.off()
-                        motor_C.off()
                         sys.exit(0)
 
                     else:
@@ -89,8 +79,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                     target_motor = motor_A
                                 elif motor_id == 'B':
                                     target_motor = motor_B
-                                elif motor_id == 'C':
-                                    target_motor = motor_C
                                 else:
                                     print("Unknown motor ID: ", motor_id)
                                     continue
@@ -124,8 +112,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             elif motor_id == 'B':
                                 motor_B.off()
                                 print("Stopping motor B.")
-                            elif motor_id == 'C':
-                                motor_C.off()
                             else:
                                 print("Unknown motor ID for stop:", motor_id)
 
