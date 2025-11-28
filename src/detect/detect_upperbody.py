@@ -22,7 +22,7 @@ class UpperBodyDetector:
         self.pose = self.mp_pose.Pose(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
-            model_complexity=0  # ★ 0が最速の "Lite" モデル
+            model_complexity=0  # 0が最速の "Lite" モデル
         )
 
         # (オプション) 検出結果を描画するためのユーティリティ
@@ -32,7 +32,7 @@ class UpperBodyDetector:
 
     def process_frame(self, frame):
         """
-        【★ 外部から呼び出すメイン関数 ★】
+        【 外部から呼び出すメイン関数 】
         1フレームを処理し、人間を検出する。
 
         :param frame: BGR画像 (numpy array)
@@ -51,7 +51,7 @@ class UpperBodyDetector:
 
         # 3. 検出結果 (results.pose_landmarks) が存在するかチェック
         if results.pose_landmarks:
-            # ★ ランドマークが見つかった = 人間（上半身）が見つかった
+            #  ランドマークが見つかった = 人間（上半身）が見つかった
             detected_items.append("UpperBody")  # main.py が期待する名前を返す
 
             # (オプション) 検出した骨格を描画する
@@ -68,7 +68,7 @@ class UpperBodyDetector:
 
 # --- このファイルが直接実行された場合のテスト動作 ---
 def main_stream():
-    stream_url = 'http://192.168.11.10:5000/video_feed'  # ★ IPアドレス確認
+    stream_url = 'http://192.168.11.10:5000/video_feed'  # IPアドレス確認
 
     try:
         detector = UpperBodyDetector()
@@ -89,7 +89,7 @@ def main_stream():
             print("ストリームが切れました。")
             break
 
-        # ★ クラスのメソッドを呼び出す ★
+        #  クラスのメソッドを呼び出す
         processed_frame, detections = detector.process_frame(frame)
 
         if detections:

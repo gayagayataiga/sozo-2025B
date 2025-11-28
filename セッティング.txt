@@ -1,0 +1,25 @@
+ラズベリーパイ側の設定
+
+~/Desktop/camera/realTimePhoto.py
+を実行5001番使用
+（このときのhttpのアドレスをmain.pyに手打ちで入力）
+~Desktop/test/test.pyを実行5000番使用
+→ローカルPCからev3に指令を送るためのサーバを起動
+
+
+
+ローカルPCの設定
+ラズベリーパイから流れてくる情報のhttpのアドレスをmain.pyに書き込む
+main.pyを起動する→顔判定などが動くようになる
+/website/test-site/server.pyを起動
+webサイトを起動する→スマホからでもアクセスできるように
+
+/serverFolder/sendrasev3command.pyを起動
+これでev3のAポートに刺さっているモータに指令値を送れる
+これをmain.pyか、server.pyから動かしたいよね
+集中度はserver.py、影はmain.pyで把握するはず
+
+
+google colabの設定
+sd23099のドライブにある創造性Bのディレクトリのcolabファイルを実行
+これをしないと、集中度がUnknownになる

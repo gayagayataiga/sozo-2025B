@@ -57,7 +57,7 @@ def handle_control():
     action = data.get('action')
     value = data.get('value')
 
-    # ★ サーバーPCのターミナルに、ブラウザからの入力を表示
+    #  サーバーPCのターミナルに、ブラウザからの入力を表示
     print(f"✅ ブラウザから受信: アクション={action}, 値={value}")
 
     if action == 'power_toggle':
@@ -71,7 +71,7 @@ def handle_control():
         # (ここに実際のロボットの明るさ制御コードを書く)
 
     elif action == 'set_color_wheel':
-        # ★ 新しく追加した色相環の処理 ★
+        #  新しく追加した色相環の処理
         # value は "rgb(R, G, B)" という文字列
         print(f"--- 新しい色 {value} を設定します ---")
 
@@ -87,6 +87,22 @@ def handle_control():
     elif action == 'move_arm':
         # アームを動かす処理
         print(f"--- アームを {value} に動かします ---")
+
+    elif action == 'set_mode_elbow':
+        try:
+            angle = int(value)
+            print(f"--- アームの角度を {angle} 度に設定します ---")
+        except ValueError:
+            print(f"[エラー] 角度の値が数値ではありません: {value}")
+        except Exception as e:
+            print(f"[エラー] モーター制御中に予期せぬエラー: {e}")
+    elif action == 'set_angle_wrist':
+        try:
+            angle = int(value)
+            print(f"--- 手首の角度を {angle} 度に設定します ---")
+
+        except ValueError:
+            print(f"[エラー] 手首の角度の値が数値ではありません: {value}")
 
     else:
         # 未知のアクション
@@ -118,14 +134,12 @@ def send_status_updates():
                     try:
                         shared_data = json.load(f)
 
-                        # ★★★ ここでJSONから値を取得 ★★★
                         ai_analysis_data = shared_data.get('ai_analysis', {})
                         analysis_results = ai_analysis_data.get('analysis', {})
                         current_concentration = analysis_results.get(
                             'concentration', 'Unknown')
                         is_sleeping_now = analysis_results.get(
                             'is_sleeping', False)  # 睡眠状態も取得
-                        # ★★★ 取得ここまで ★★★
 
                     except json.JSONDecodeError:
                         print(f"[警告] {DATA_JSON_PATH} のJSON形式が正しくありません。")
@@ -136,13 +150,13 @@ def send_status_updates():
 
             # --- 送信するデータを作成 ---
             data_to_send = {
-                # ★ JavaScript側が期待するキー名に合わせる
+                #  JavaScript側が期待するキー名に合わせる
                 'concentration_level': current_concentration,
                 'is_sleeping': is_sleeping_now,  # 睡眠状態も追加
                 'timestamp': timestamp
             }
 
-            # ★ 'status_update' イベントで送信 ★
+            #  'status_update' イベントで送信
             socketio.emit('status_update', data_to_send)
 
             print(

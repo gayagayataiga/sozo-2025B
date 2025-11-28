@@ -579,6 +579,31 @@ button {
 	/* 最前面に表示 */
 }
 
+#robot-move-modal .modal-content {
+	background-color: #312a4b;
+	/* 濃い灰色の背景 */
+	color: #fff;
+	/* テキストの色を白に設定 */
+}
+
+/* ロボット動作設定モーダル内の画像スタイル */
+.robot-status-visual {
+	width: 100%;
+	text-align: center;
+	/* imgを中央揃えにする */
+	margin: 15px 0;
+	/* 上下の余白（<p>タグとの間に隙間を作る） */
+}
+
+#robot-status-image {
+	max-width: 90%;
+	/* モーダルの幅の90%を最大幅にする */
+	height: auto;
+	/* 高さは自動でアスペクト比を維持 */
+	border-radius: 8px;
+	/* (オプション) 角を少し丸める */
+}
+
 /* * これが「デフォルトで非表示」の仕組みです。
  * .hidden クラスが付いている時は、表示しない（display: none）
 */
@@ -590,7 +615,7 @@ button {
 /* * モーダルの中身（白いボックス）のスタイル
 */
 .modal-content {
-	background-color: #ffffff;
+	background-color: #312a4b;
 	/* 白背景 */
 	padding: 24px;
 	border-radius: 12px;
@@ -611,6 +636,54 @@ button {
 #arm-controls button#arm-move-home {
 	grid-column: 1 / -1;
 	/* 「定位置へ」ボタンを1列全体に */
+}
+
+/* ロボットモーダル内の操作ボタンエリア */
+#arm-controls {
+	display: flex;
+	/* 2つのグループを横に並べる */
+	justify-content: space-around;
+	/* グループ間に均等にスペースを空ける */
+	width: 100%;
+	margin-top: 20px;
+}
+
+/* 各操作グループ (アーム操作 / 別モータ) */
+.control-group {
+	display: flex;
+	flex-direction: column;
+	/* ボタンを縦に並べる */
+	align-items: center;
+	/* ボタンを中央揃えにする */
+}
+
+/* (見出しの文字色。背景が暗い(#333など)場合は #fff にしてください) */
+.control-group h3 {
+	color: #fff;
+	margin-bottom: 10px;
+}
+
+/* 操作ボタン (▲ ● ▼) */
+.control-button {
+	font-size: 24px;
+	/* 記号のフォントサイズを大きく */
+	line-height: 1;
+	/* 記号の縦位置を中央に */
+	padding: 15px 25px;
+	margin: 5px 0;
+	width: 100px;
+	/* ボタンの幅を統一 */
+
+	/* (既存のボタンスタイルに合わせて調整してください) */
+	background-color: #f0f0f0;
+	color: #333;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.control-button:hover {
+	background-color: #e0e0e0;
 }
 
 
