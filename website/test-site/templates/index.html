@@ -45,7 +45,7 @@
 		</div>
 	</div>
 
-	
+
 	<div id="robot-move-modal" class="hidden">
 		<div class="modal-content">
 			<h2>ロボット操作リモコン</h2>
@@ -65,6 +65,22 @@
 					<button id="wrist-motor-up" class="control-button">▲</button>
 					<button id="wrist-motor-home" class="control-button">●</button>
 					<button id="wrist-motor-down" class="control-button">▼</button>
+				</div>
+				<div class="control-group">
+					<h3>肩モータ</h3>
+					<label>角度: <span id="shoulder-angle-value">90</span> 度</label>
+				
+					<div class="slider-group">
+						<span class="icon-min">60°</span>
+						<input type="range" 
+							id="shoulder-angle-slider" 
+							min="60" 
+							max="120" 
+							step="5" 
+							value="90">
+						<span class="icon-max">120°</span>
+						<button id="shoulder-motor-home" class="control-button">RESET</button>
+					</div>
 				</div>
 			</div>
 		</div>
