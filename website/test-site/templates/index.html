@@ -10,6 +10,7 @@
 	<header>
 		<h1>AI 支援学習照明コントローラー</h1>
 	</header>
+	<div class="user-info"> ようこそ、<span id="username-display">ゲスト</span> さん </div>
 	<div id="visual-feedback-area">
 		<h2 id="status-text">ロボットの状態：オフライン</h2>
 		<div id="active-visual" class="light-off">
@@ -19,6 +20,7 @@
 	<div id="control-panel">
 		<p>集中度スコア: <span id="concentration">N/A</span></p>
 		<p id="timer-display">経過時間: 00:00:00</p>
+		<button id="show-study-log-button">📚 勉強記録</button>
 		<h3>基本操作</h3>
 		<button id="power-toggle" data-status="off">電源をオンにする</button>
 		<button id="open-settings-button">💡 照明設定を開く</button>
@@ -47,24 +49,44 @@
 	<div id="robot-move-modal" class="hidden">
 		<div class="modal-content">
 			<h2>ロボット操作リモコン</h2>
-			<div class="robot-status-visual">
+			<!-- <div class="robot-status-visual">
 				<img id="robot-status-image" src="../static/photo/arm.jpg" alt="ロボットの現在の状態">
-			</div>
-			<p>手動でアームの動作を制御します。</p>
+			</div> -->
+			<p>スライダーでアームの角度を調整します。</p>
 			<div id="arm-controls">
 				<div class="control-group">
-					<h3>アーム操作</h3>
-					<button id="arm-move-up" class="control-button">▲</button>
-					<button id="arm-move-home" class="control-button">●</button>
-					<button id="arm-move-down" class="control-button">▼</button>
+					<h3>肘 <span id="arm-value-display">90</span>°</h3>
+					<div class="slider-wrapper">
+						<input type="range" id="arm-slider" class="robot-slider" min="50" max="130" value="90" step="1">
+						<button id="arm-home" class="home-btn" title="初期位置へ">●</button>
+					</div>
 				</div>
 				<div class="control-group">
-					<h3>別モータ</h3>
-					<button id="wrist-motor-up" class="control-button">▲</button>
-					<button id="wrist-motor-home" class="control-button">●</button>
-					<button id="wrist-motor-down" class="control-button">▼</button>
+					<h3>手首 <span id="wrist-value-display">0</span>°</h3>
+					<div class="slider-wrapper">
+						<input type="range" id="wrist-slider" class="robot-slider" min="-30" max="30" value="0"
+							step="5">
+						<button id="wrist-home" class="home-btn" title="初期位置へ">●</button>
+					</div>
+				</div>
+				<div class="control-group">
+					<h3>肩 <span id="shoulder-value-display">0</span>°</h3>
+					<div class="slider-wrapper">
+						<input type="range" id="shoulder-slider" class="robot-slider" min="-20" max="20" value="0"
+							step="5">
+						<button id="shoulder-home" class="home-btn" title="初期位置へ">●</button>
+					</div>
 				</div>
 			</div>
+		</div>
+	</div>
+	<div id="study-log-modal" class="hidden">
+		<div class="modal-content">
+			<h2>📚 勉強記録</h2>
+			<div id="log-content-area">
+				<p>ここに勉強記録が表示されます...</p>
+			</div>
+			<button id="close-log-modal-button">閉じる</button>
 		</div>
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/vanilla-picker@2.12.3/dist/vanilla-picker.min.js"></script>
@@ -77,8 +99,8 @@
 	<script type="module" src="../static/main.js" defer></script>
 	<script type="module" src="../static/lightingModal.js" defer></script>
 	<script type="module" src="../static/robotModal.js" defer></script>
+	<script type="module" src="../static/studyLogModal.js" defer></script>
 	<script src="../static/animation.js" defer></script>
 	<!-- <script src="../static/illuminatingrobot.js" defer></script> -->
-	<script src="../static/animation.js" defer></script>
 </body>
 </html>

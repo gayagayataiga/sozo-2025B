@@ -77,5 +77,56 @@ socket.on('status_update', (data) => {
 		concentrationDisplay.textContent = level;
 	}
 
+	const nameElement = document.getElementById('username-display');
+	if (nameElement) {
+		// データに username が入っていれば表示、なければ 'ゲスト'
+		nameElement.textContent = data.username || 'ゲスト';
+	}
+
 	// (animation.js に関連するロジックはここには含めない)
 });
+
+/**
+ * 勉強時間をサーバーに保存する (POST /api/log)
+ * (main.js から呼ばれることを想定)
+ * @param {string} duration - "HH:MM:SS" 形式の経過時間
+ */
+export async function saveStudyLog(duration) {
+	try {
+		const response = await fetch(`${API_BASE_URL}/api/log`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ duration: duration }),
+		});
+		if (!response.ok) {
+			throw new Error(`ログの保存に失敗しました: ${response.status}`);
+		}
+		console.log(`✅ 勉強記録の保存成功: ${duration}`);
+		return await response.json();
+	} catch (error) {
+		console.error('❌ saveStudyLog エラー:', error);
+		return null;
+	}
+}
+
+/**
+ * 勉強記録の履歴をサーバーから取得する (GET /api/logs)
+ * (studyLogModal.js から呼ばれることを想定)
+ * @returns {Promise<Array|null>} 記録の配列、またはエラー時 null
+ */
+export async function fetchStudyLogs() {
+	try {
+		const response = await fetch(`${API_BASE_URL}/api/logs`);
+		if (!response.ok) {
+			throw new Error(`ログの取得に失敗しました: ${response.status}`);
+		}
+		const logs = await response.json();
+		console.log(`✅ 勉強記録の取得成功 (${logs.length}件)`);
+		return logs;
+	} catch (error) {
+		console.error('❌ fetchStudyLogs エラー:', error);
+		return null;
+	}
+}

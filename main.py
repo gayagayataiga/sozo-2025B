@@ -28,6 +28,10 @@ except ImportError as e:
 # AIの推論がどれだけ遅くなるかわからないし、早いかもしれないので、固定長のキューを使う
 historical_data = deque(maxlen=config.HISTORICAL_DATA_MAXLEN)
 
+premorters = {"elbow": config.INITIAL_ELBOW_ANGLE,
+              "wrist": config.INITIAL_WRIST_ANGLE,
+              "shoulder": config.INITIAL_SHOULDER_ANGLE}
+
 
 def run_async_from_sync(coro, wait_for_completion=False):
     """
@@ -223,6 +227,63 @@ while True:
                 print(f"警告: {filepath} が見つかりません。")
                 continue
 
+            # モータの方を角度制御する
+            if 'elbow' in content:
+                # content['elbow'] に "A:180:30" のような文字列が入っていると想定
+                command_string = content['elbow']
+                if content['elbow'] != premorters['elbow']:
+
+                    print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                    # EV3Commanderの仕様に合わせる
+                    command_string = "A:" + \
+                        str(-command_string+premorters['elbow'])+":30"
+                    premorters['elbow'] = content['elbow']
+
+                    # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                    data_to_send = {
+                        "ev3_command": command_string,  # サーバー側が期待するキー名
+                        "client_timestamp": time.time()
+                    }
+                    ev3_communicator.send_request(data_to_send)
+
+            if 'wrist' in content:
+                # content['wrist'] に "A:180:30" のような文字列が入っていると想定
+                command_string = content['wrist']
+                if content['wrist'] != premorters['wrist']:
+
+                    print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                    # EV3Commanderの仕様に合わせる
+                    command_string = "B:" + \
+                        str(-command_string+premorters['wrist'])+":30"
+                    premorters['wrist'] = content['wrist']
+
+                    # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                    data_to_send = {
+                        "ev3_command": command_string,  # サーバー側が期待するキー名
+                        "client_timestamp": time.time()
+                    }
+                    # send_request メソッドを呼び出す
+                    ev3_communicator.send_request(data_to_send)
+
+            if 'shoulder' in content:
+                # content['shoulder'] に "A:180:30" のような文字列が入っていると想定
+                command_string = content['shoulder']
+                if content['shoulder'] != premorters['shoulder']:
+
+                    print(f"--- EV3にコマンドを送信します: {command_string} ---")
+                    # EV3Commanderの仕様に合わせる
+                    command_string = "C:" + \
+                        str(-command_string+premorters['shoulder'])+":30"
+                    premorters['shoulder'] = content['shoulder']
+
+                    # EV3Commanderの send_request メソッドが要求する辞書形式を作成
+                    data_to_send = {
+                        "ev3_command": command_string,  # サーバー側が期待するキー名
+                        "client_timestamp": time.time()
+                    }
+                    # send_request メソッドを呼び出す
+                    ev3_communicator.send_request(data_to_send)
+
             # 変更があった場合,switchbotのライトを操作する
             # json の値のcolorsを受け取り、ライトを操作する
             if 'color' in content:
@@ -231,7 +292,8 @@ while True:
                     r = color_dict['r']
                     g = color_dict['g']
                     b = color_dict['b']
-                    brightness = 100  # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+                    # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
+                    brightness = content["brightness"]
 
                     #  辞書をSwitchBot用のbytesコマンドに変換
                     color_command_bytes = bytes([
@@ -354,7 +416,7 @@ while True:
             print("[S3 -> S1] 顔の追跡をロスト。上半身から探索を再開します。")
             current_state = config.STATE_SEARCHING_BODY
 
-    time.sleep(0.3)  # ファイル削除の小さな遅延
+    time.sleep(0.01)  # ファイル削除の小さな遅延
 
     result_file = config.AI_RESULT_FILENAME
     if os.path.exists(result_file):
@@ -378,6 +440,7 @@ while True:
 
             # AIデータを 'ai_analysis' キーとして更新
             shared_data['ai_analysis'] = ai_data
+            shared_data['user_name'] = name
 
             # data.json に書き戻す
             with open(config.SHARED_DATA_FILENAME, 'w') as f:

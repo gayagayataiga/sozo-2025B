@@ -11,16 +11,22 @@
 // --- ロボットの動作を定義する定数 ---
 
 // 肘 (Arm)
-export const ANGLE_HOME = 90;
-export const ANGLE_STEP = 10;
-export const ANGLE_MIN = 70;
-export const ANGLE_MAX = 100;
+export const ANGLE_HOME = 100;
+export const ANGLE_STEP = 1;
+export const ANGLE_MIN = 80;
+export const ANGLE_MAX = 120;
 
 // 手首 (Wrist)
-export const WRIST_ANGLE_HOME = 45;
+export const WRIST_ANGLE_HOME = 0;
 export const WRIST_ANGLE_STEP = 5;
-export const WRIST_ANGLE_MIN = 30;
-export const WRIST_ANGLE_MAX = 60;
+export const WRIST_ANGLE_MIN = -30;
+export const WRIST_ANGLE_MAX = 30;
+
+// 肩 (Shoulder)
+export const SHOULDER_ANGLE_HOME = 0;
+export const SHOULDER_ANGLE_STEP = 5;
+export const SHOULDER_ANGLE_MIN = -20;
+export const SHOULDER_ANGLE_MAX = 20;
 
 
 // --- アプリケーションの現在の状態 (State) ---
@@ -35,7 +41,7 @@ export let timerInterval = null;
 // モーターの現在角度
 export let currentArmAngle = ANGLE_HOME;
 export let currentWristAngle = WRIST_ANGLE_HOME;
-
+export let currentShoulderAngle = SHOULDER_ANGLE_HOME;
 
 // --- 状態を変更するための関数 (Setter) ---
 // 他のファイルは、状態を直接変更する代わりに
@@ -59,4 +65,8 @@ export function setArmAngle(angle) {
 
 export function setWristAngle(angle) {
 	currentWristAngle = angle;
+}
+
+export function setShoulderAngle(angle) {
+	currentShoulderAngle = angle;
 }

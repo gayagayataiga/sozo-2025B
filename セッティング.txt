@@ -23,3 +23,9 @@ webサイトを起動する→スマホからでもアクセスできるよう�
 google colabの設定
 sd23099のドライブにある創造性Bのディレクトリのcolabファイルを実行
 これをしないと、集中度がUnknownになる
+
+ev3のログイン
+sshで、出来ないとき
+Ctrl+Alt+F3でログイン画面になる
+user:robot
+password: maker

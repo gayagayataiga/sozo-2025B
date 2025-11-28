@@ -105,6 +105,11 @@ def handle_control():
         # 明るさ変更の処理 (value は 0〜100 の数値)
         print(f"--- 明るさを {value} にします ---")
         # (ここに実際のロボットの明るさ制御コードを書く)
+        try:
+            brightness = int(value)
+            update_motor_state('brightness', brightness)
+        except ValueError:
+            print(f"[エラー] 明るさの値が数値ではありません: {value}")
 
     elif action == config.COLOR_WHEEL_COMMAND:
         #  新しく追加した色相環の処理
@@ -143,6 +148,15 @@ def handle_control():
         except ValueError:
             print(f"[エラー] 手首の角度の値が数値ではありません: {value}")
 
+    elif action == config.SHOULDER_MOVE_COMMAND:
+        try:
+            angle = int(value)
+            print(f"--- 肩の角度を {angle} 度に設定します ---")
+            # JSONファイルに書き込む
+            update_motor_state('shoulder', angle)  # 'shoulder' は main.py が読むキー
+        except ValueError:
+            print(f"[エラー] 肩の角度の値が数値ではありません: {value}")
+
     else:
         # 未知のアクション
         print(f"--- 未知のアクション {action} です ---")
@@ -180,6 +194,8 @@ def send_status_updates():
                             config.AI_CONCENTRATION_KEY, config.AI_ANALYSIS_ERROR_VALUE)
                         is_sleeping_now = analysis_results.get(
                             config.AI_SLEEPING_KEY, False)  # 睡眠状態も取得
+                        username = shared_data.get(
+                            config.USERNAME_KEY, "Unknown User")
 
                     except json.JSONDecodeError:
                         print(
@@ -196,7 +212,8 @@ def send_status_updates():
                 #  JavaScript側が期待するキー名に合わせる
                 'concentration_level': current_concentration,
                 'is_sleeping': is_sleeping_now,  # 睡眠状態も追加
-                'timestamp': timestamp
+                'timestamp': timestamp,
+                "username": username
             }
 
             #  'status_update' イベントで送信

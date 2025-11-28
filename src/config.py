@@ -9,7 +9,7 @@ PYTHON_EXECUTABLE = sys.executable
 
 # --- ネットワーク設定 (Raspberry Pi / EV3) ---
 # ラズベリーパイのIPアドレス (環境に合わせて変更)
-RASPBERRY_PI_IP = "10.27.73.108"
+RASPBERRY_PI_IP = "10.27.74.138"
 
 # 映像ストリームのポートとパス
 STREAM_PORT = 5001
@@ -73,6 +73,13 @@ SHARED_DATA_FILENAME = 'data/data.json'
 # AI (サブプロセス) のスクリプト名
 AI_SCRIPT_FILENAME = 'ai.py'
 
+# --- データベース設定 ---
+# SQLiteデータベースファイル名
+DB_NAME = 'data/study_logs.db'
+# データベースをいじるpythonファイル
+DB_MANAGE_SCRIPT = 'dbwithpython/managedb.py'
+
+
 # --- その他 ---
 # ファイルI/O（入出力）の競合を避けるための小さな遅延 (秒)
 FILE_OPERATION_DELAY_SHORT = 0.3
@@ -113,6 +120,9 @@ ELBOW_MOVE_COMMAND = 'set_angle_elbow'
 # 手首を動かす命令の判別
 WRIST_MOVE_COMMAND = 'set_angle_wrist'
 
+# 肩を動かす命令の判別
+SHOULDER_MOVE_COMMAND = 'set_angle_shoulder'
+
 # ブラウザから送られてくるactionのjsonキー
 ACTION_KEY = 'action'
 
@@ -133,3 +143,11 @@ AI_ANALYSIS_ERROR_VALUE = 'Unknown'
 
 # aiの分析結果内の睡眠状態のキー
 AI_SLEEPING_KEY = 'is_sleeping'
+
+# webサイトから送られてくるユーザー名のキー
+USERNAME_KEY = 'username'
+
+# 最初のモーター角
+INITIAL_ELBOW_ANGLE = 90
+INITIAL_WRIST_ANGLE = 45
+INITIAL_SHOULDER_ANGLE = 90
