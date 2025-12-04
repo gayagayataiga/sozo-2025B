@@ -20,6 +20,7 @@ try:
     from src.makehash import check_json_changes
     from src.switchbot_python.switchbot_API_ble import control_switchbot_light, LIGHT_MAC_ADDRESS, COMMAND_ON, COMMAND_OFF, COMMAND_BLUE, COMMAND_GREEN, COMMAND_RED, CHARACTERISTIC_UUID
     from src import config  # 設定変数をまとめたファイル
+    from dbwithpython.save_to_db import save_session_to_db, update_concentration  # データベース保存関数
 except ImportError as e:
     print(f"エラー: モジュールのインポートに失敗しました。{e}")
     exit()
@@ -27,6 +28,14 @@ except ImportError as e:
 # キューを使って、最大の長さが30のデータを確実に送る
 # AIの推論がどれだけ遅くなるかわからないし、早いかもしれないので、固定長のキューを使う
 historical_data = deque(maxlen=config.HISTORICAL_DATA_MAXLEN)
+
+# === データベース保存用の変数 ===
+# 5分間のデータを蓄積してデータベースに保存
+session_data = []  # 5分間のデータを蓄積するリスト
+session_start_time = time.time()  # セッション開始時刻
+DB_SAVE_INTERVAL = 5 * 60  # 5分（秒単位）
+current_light_color = {'r': 255, 'g': 255, 'b': 255, 'brightness': 80}  # 現在のライト色
+current_session_id = None  # 現在のセッションID（AI応答後に集中度を更新するために使う）
 
 premorters = {"elbow": config.INITIAL_ELBOW_ANGLE,
               "wrist": config.INITIAL_WRIST_ANGLE,
@@ -150,6 +159,7 @@ class NumpyEncoder(json.JSONEncoder):
 
 # 常時回るコード
 while True:
+    global session_data, session_start_time, current_light_color, current_session_id
 
     ret, frame = cap.read()
     if not ret:
@@ -306,6 +316,9 @@ while True:
 
                     print(f"--- switchbotライトを RGB({r},{g},{b}) に変更します ---")
 
+                    # 現在のライト色を記録（データベース保存用）
+                    current_light_color = {'r': r, 'g': g, 'b': b, 'brightness': brightness}
+
                     # run_async_from_sync を使う (asyncio.run ではない)
                     run_async_from_sync(
                         control_switchbot_light(
@@ -362,6 +375,27 @@ while True:
                     # 'landmarks': face['landmarks']
                 }
                 historical_data.append(current_frame_data)
+
+                # === データベース保存用: 5分間のデータを蓄積 ===
+                session_data.append(current_frame_data.copy())
+
+                # 5分経過したらデータベースに保存
+                current_time = time.time()
+                if current_time - session_start_time >= DB_SAVE_INTERVAL:
+                    print(f"\n--- 5分経過しました。データベースに保存します ---")
+                    try:
+                        # データベースに保存（集中度はまだ書き込まない）
+                        session_id = save_session_to_db(name, session_data, current_light_color)
+                        if session_id is not None:
+                            current_session_id = session_id  # session_idを保存
+                        # 保存後、セッションデータをリセット
+                        session_data = []
+                        session_start_time = current_time
+                    except Exception as e:
+                        print(f"データベース保存エラー: {e}")
+                        # エラーが発生してもデータをリセット（メモリ溢れ防止）
+                        session_data = []
+                        session_start_time = current_time
 
                 # 1. AIプロセスが現在実行中か？
                 ai_is_running = ai_process and ai_process.poll() is None
@@ -447,6 +481,46 @@ while True:
                 json.dump(shared_data, f, indent=4)
 
             print(f"--- {config.SHARED_DATA_FILENAME} を更新しました: {ai_data} ---")
+
+            # === データベースに集中度を更新 ===
+            # AI応答に集中度データが含まれていて、かつ保存済みのセッションIDがある場合
+            if current_session_id is not None and 'analysis' in ai_data:
+                analysis = ai_data.get('analysis', {})
+                concentration_str = analysis.get('concentration', '')
+
+                # 集中度のパースを試みる
+                # 例: "High (85%)" → 85
+                # 例: "Medium (55%)" → 55
+                # 例: "Unknown" → スキップ
+                if concentration_str and concentration_str != "Unknown":
+                    try:
+                        # 集中度データを作成（簡易版）
+                        # TODO: AI応答の形式に合わせて調整が必要
+                        concentration_value = 70  # デフォルト値
+
+                        if "High" in concentration_str:
+                            concentration_value = 80
+                        elif "Medium" in concentration_str:
+                            concentration_value = 55
+                        elif "Low" in concentration_str:
+                            concentration_value = 30
+
+                        concentration_data = {
+                            'concentration_avg': concentration_value,
+                            'concentration_max': min(100, concentration_value + 15),
+                            'concentration_min': max(0, concentration_value - 15),
+                            'ratio_high': 0.5,  # TODO: 実際の値に置き換え
+                            'ratio_medium': 0.3,
+                            'ratio_low': 0.15,
+                            'ratio_zero': 0.05
+                        }
+
+                        # データベースの集中度を更新
+                        update_concentration(current_session_id, concentration_data)
+                        current_session_id = None  # 更新済みなのでリセット
+
+                    except Exception as e:
+                        print(f"集中度の更新中にエラー: {e}")
 
             # 処理済みの結果ファイルを削除
             os.remove(result_file)
