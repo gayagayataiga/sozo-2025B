@@ -143,6 +143,8 @@ def add_detailed_log(data):
 
 # --- 実行テスト ---
 if __name__ == "__main__":
+    # まずデータベースを初期化（新しいテーブルを追加）
+    init_db()
 
     # サンプルデータ（辞書形式で渡すと管理しやすいです）
     sample_data = {
