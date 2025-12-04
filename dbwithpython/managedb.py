@@ -110,12 +110,11 @@ def add_detailed_log(data):
 
 # --- 実行テスト ---
 if __name__ == "__main__":
-    init_db()
 
     # サンプルデータ（辞書形式で渡すと管理しやすいです）
     sample_data = {
-        "username": "takahashi",
-        "duration": 60,             # 60分
+        "username": "Gayagaya",
+        "duration": 10,             # 10分
         "conc_avg": 85.5,           # 平均集中度
         "conc_max": 98,             # 最大
         "conc_min": 40,             # 最小

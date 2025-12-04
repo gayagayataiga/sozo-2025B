@@ -127,4 +127,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         print("Stopping all motors before exit.")
         motor_A.off()
         motor_B.off()
-        motor_C.off()
