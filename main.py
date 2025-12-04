@@ -20,7 +20,7 @@ try:
     from src.makehash import check_json_changes
     from src.switchbot_python.switchbot_API_ble import control_switchbot_light, LIGHT_MAC_ADDRESS, COMMAND_ON, COMMAND_OFF, COMMAND_BLUE, COMMAND_GREEN, COMMAND_RED, CHARACTERISTIC_UUID
     from src import config  # 設定変数をまとめたファイル
-    from dbwithpython.save_to_db import save_session_to_db, update_concentration  # データベース保存関数
+    from dbwithpython.save_to_db import save_session_to_db, update_concentration, save_ai_analysis_result  # データベース保存関数
 except ImportError as e:
     print(f"エラー: モジュールのインポートに失敗しました。{e}")
     exit()
@@ -484,6 +484,12 @@ while True:
 
                 print(
                     f"--- {config.SHARED_DATA_FILENAME} を更新しました: {ai_data} ---")
+
+                # === AI分析結果をデータベースに保存 ===
+                try:
+                    save_ai_analysis_result(current_session_id, ai_data)
+                except Exception as e:
+                    print(f"AI分析結果の保存エラー: {e}")
 
                 # === データベースに集中度を更新 ===
                 # AI応答に集中度データが含まれていて、かつ保存済みのセッションIDがある場合

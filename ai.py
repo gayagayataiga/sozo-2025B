@@ -5,6 +5,16 @@ import uuid
 import sys
 import numpy as np
 
+# データベース読み取り関数をインポート
+try:
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'dbwithpython'))
+    from read_from_db import get_recent_sessions_with_frames
+    print("Successfully imported database functions.")
+except ImportError as e:
+    print(f"Warning: Could not import database functions: {e}")
+    print("Database history will not be sent to Colab.")
+    get_recent_sessions_with_frames = None
+
 # --- 設定項目 ---
 # main.py が生成する入力ファイル
 INPUT_JSON_PATH = "ai_input.json"
@@ -14,6 +24,8 @@ RESULT_JSON_PATH = "ai_result.json"
 ANALYSIS_SERVER_URL = "https://abrielle-crustal-lowell.ngrok-free.dev/upload_json"
 # サーバーへの接続タイムアウト（秒）
 SERVER_TIMEOUT = 10.0
+# データベースから取得する過去のセッション数
+DB_HISTORY_LIMIT = 5
 
 # 依存ライブラリのインポートチェック
 try:
@@ -114,13 +126,43 @@ def main_process():
             f"---  FATAL: An unexpected error occurred during loading: {e} ---")
         return
 
+    # --- データベースから過去のセッションデータを取得 ---
+    historical_sessions = []
+    if get_recent_sessions_with_frames:
+        try:
+            username = input_data.get('name', None)
+            print(f"データベースから過去{DB_HISTORY_LIMIT}セッションを読み込み中...")
+            historical_sessions = get_recent_sessions_with_frames(
+                username=username,
+                limit=DB_HISTORY_LIMIT
+            )
+            print(f"過去{len(historical_sessions)}セッションのデータを取得しました。")
+            for i, session in enumerate(historical_sessions):
+                print(f"  セッション{i+1}: ID={session['session_id']}, "
+                      f"フレーム数={len(session['frames'])}, "
+                      f"集中度={session['concentration_avg']}")
+        except Exception as e:
+            print(f"Warning: データベースからの履歴取得に失敗しました: {e}")
+            historical_sessions = []
+    else:
+        print("データベース機能が利用できません。履歴データなしで続行します。")
+
+    # --- Colabサーバーに送信するデータを準備 ---
+    # 現在のデータ + 過去のセッションデータを含める
+    payload = {
+        'current_data': {
+            'name': input_data.get('name'),
+            'time_series_data': input_data.get('time_series_data', [])
+        },
+        'historical_sessions': historical_sessions
+    }
+
     # --- Colabサーバーに分析をリクエスト ---
-    # input_data (time_series_dataを含む) をそのままペイロードとして送信
     if not ANALYSIS_SERVER_URL:
         print("---  FATAL: ANALYSIS_SERVER_URL が設定されていません。 ---")
         return
 
-    colab_response = get_analysis_from_server(input_data, ANALYSIS_SERVER_URL)
+    colab_response = get_analysis_from_server(payload, ANALYSIS_SERVER_URL)
 
     # --- 最終結果データを作成 ---
     final_result_data = {}

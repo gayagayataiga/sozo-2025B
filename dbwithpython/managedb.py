@@ -27,29 +27,62 @@ def init_db():
         CREATE TABLE IF NOT EXISTS study_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
-            
+
             -- 時間と集中度データ
             study_duration_minutes INTEGER,
             concentration_avg REAL,
             concentration_max INTEGER,
             concentration_min INTEGER,
-            
+
             -- 集中度の割合 (High, Medium, Low, Zero)
             ratio_high REAL,
             ratio_medium REAL,
             ratio_low REAL,
             ratio_zero REAL,
-            
+
             -- ライトの設定
             light_r INTEGER,
             light_g INTEGER,
             light_b INTEGER,
             light_brightness INTEGER,
-            
+
             timestamp TEXT,
             FOREIGN KEY (username) REFERENCES users(username)
         )
     ''')
+
+    # 3. 詳細フレームデータテーブル（5分間の全フレームデータを保存）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS frame_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            timestamp REAL NOT NULL,
+            ear REAL,
+            mar REAL,
+            pose_P REAL,
+            pose_Y REAL,
+            pose_R REAL,
+            FOREIGN KEY (session_id) REFERENCES study_logs(id)
+        )
+    ''')
+
+    # 4. AI分析結果テーブル（AIの全ての応答を保存）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ai_analysis_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER,
+            status TEXT,
+            is_sleeping INTEGER,
+            concentration TEXT,
+            local_run_id TEXT,
+            colab_run_id TEXT,
+            processing_timestamp REAL,
+            raw_response TEXT,
+            created_at TEXT,
+            FOREIGN KEY (session_id) REFERENCES study_logs(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
     print("データベース初期化完了")

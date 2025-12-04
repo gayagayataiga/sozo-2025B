@@ -118,17 +118,114 @@ def save_session_to_db(username, time_series_data, light_color=None):
     cursor.execute(sql, values)
     session_id = cursor.lastrowid  # 保存したレコードのIDを取得
     conn.commit()
+
+    # === 詳細フレームデータを保存 ===
+    print(f"詳細フレームデータを保存中... ({len(time_series_data)}フレーム)")
+    frame_sql = '''
+        INSERT INTO frame_data (
+            session_id, timestamp, ear, mar, pose_P, pose_Y, pose_R
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    frame_values = [
+        (
+            session_id,
+            frame.get('timestamp', 0),
+            frame.get('ear'),
+            frame.get('mar'),
+            frame.get('pose_P'),
+            frame.get('pose_Y'),
+            frame.get('pose_R')
+        )
+        for frame in time_series_data
+    ]
+
+    cursor.executemany(frame_sql, frame_values)
+    conn.commit()
     conn.close()
 
     print(f"\n=== データベース保存完了（集中度は未設定） ===")
     print(f"セッションID: {session_id}")
     print(f"ユーザー: {username}")
     print(f"時間: {duration_minutes} 分")
+    print(f"フレーム数: {len(time_series_data)}")
     print(f"タイムスタンプ: {now}")
     print("集中度はAI分析後に更新されます。")
     print("=" * 30 + "\n")
 
     return session_id
+
+
+def save_ai_analysis_result(session_id, ai_result_data):
+    """
+    AI分析結果をデータベースに保存する
+
+    Args:
+        session_id: 対象のstudy_logsのID（Noneの場合もある）
+        ai_result_data: dict AI分析結果の全データ
+            例: {
+                'status': 'processed_by_colab',
+                'analysis': {'is_sleeping': False, 'concentration': 'High (85%)'},
+                'local_run_id': '...',
+                'colab_run_id': '...',
+                'processing_timestamp': 1234567890.123,
+                ...
+            }
+
+    Returns:
+        int: 保存したレコードのID、失敗時はNone
+    """
+    import json
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 分析結果から主要な値を抽出
+    status = ai_result_data.get('status', 'unknown')
+    analysis = ai_result_data.get('analysis', {})
+    is_sleeping = 1 if analysis.get('is_sleeping', False) else 0
+    concentration = analysis.get('concentration', 'Unknown')
+    local_run_id = ai_result_data.get('local_run_id', '')
+    colab_run_id = ai_result_data.get('colab_run_id', '')
+    processing_timestamp = ai_result_data.get('processing_timestamp', 0)
+
+    # 全データをJSONとして保存
+    raw_response = json.dumps(ai_result_data, ensure_ascii=False, indent=2)
+
+    sql = '''
+        INSERT INTO ai_analysis_results (
+            session_id, status, is_sleeping, concentration,
+            local_run_id, colab_run_id, processing_timestamp,
+            raw_response, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    values = (
+        session_id,
+        status,
+        is_sleeping,
+        concentration,
+        local_run_id,
+        colab_run_id,
+        processing_timestamp,
+        raw_response,
+        now
+    )
+
+    cursor.execute(sql, values)
+    result_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    print(f"\n=== AI分析結果をデータベースに保存しました ===")
+    print(f"結果ID: {result_id}")
+    print(f"セッションID: {session_id}")
+    print(f"ステータス: {status}")
+    print(f"集中度: {concentration}")
+    print(f"寝ている: {'はい' if is_sleeping else 'いいえ'}")
+    print("=" * 30 + "\n")
+
+    return result_id
 
 
 def update_concentration(session_id, concentration_data):
