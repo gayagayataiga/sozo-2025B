@@ -3,7 +3,7 @@
 		"status": "error_colab_failed",
 		"analysis": {
 			"is_sleeping": false,
-			"concentration": "Unknown"
+			"concentration": "Low"
 		},
 		"debug_info": {
 			"error": "Failed to get analysis from Colab server."

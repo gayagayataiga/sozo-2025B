@@ -19,7 +19,8 @@ import {
 	startTime, setStartTime,
 	timerInterval, setTimerInterval,
 	setArmAngle, ANGLE_HOME,
-	setWristAngle, WRIST_ANGLE_HOME
+	setWristAngle, WRIST_ANGLE_HOME,
+	setShoulderAngle, SHOULDER_ANGLE_HOME
 } from './state.js';
 
 // robotModal.js から 肘の画像更新関数 をインポート
@@ -60,15 +61,7 @@ socket.on('disconnect', () => {
 	console.log("❌ WebSocket 切断 (main.js)");
 });
 
-// 集中度ステータスの更新
-socket.on('status_update', (data) => {
-	console.log('受信データ (main.js):', data);
-
-	if (concentrationDisplay) {
-		const level = data.concentration_level || 'N/A';
-		concentrationDisplay.textContent = level;
-	}
-});
+// 注: 'status_update' イベントは api.js で処理されます
 
 function formatTime(seconds) {
 	const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -116,15 +109,17 @@ powerToggle.addEventListener('click', () => {
 		visualArea.classList.remove('light-off');
 		visualArea.classList.add('light-on');
 
-		// 1. 状態(state.js)をリセット
+		// 1. 状態(state.js)をリセット - 初期位置に戻す
 		setArmAngle(ANGLE_HOME);
 		setWristAngle(WRIST_ANGLE_HOME);
+		setShoulderAngle(SHOULDER_ANGLE_HOME);
 		setPowerOn(true);
 
 		// 2. UIをリセット (robotModal.js の関数を呼ぶ)
 		updateArmImage(ANGLE_HOME);
 
 		// 3. サーバーに送信 (api.js の関数を呼ぶ)
+		// サーバー側で初期位置(90, 45, 90)をmoveMotors.jsonに書き込む
 		sendCommand('power_toggle', 'on');
 
 		// 4. タイマーとアニメーションを開始

@@ -99,7 +99,36 @@ def handle_control():
     if action == config.POWER_COMMAND:
         # 電源ON/OFFの処理 (value は 'on' または 'off')
         print(f"--- 電源を {value} にします ---")
-        # (ここに実際のロボットの電源制御コードを書く)
+
+        if value == 'on':
+            # 電源ON時: モーターを初期位置に移動
+            print("--- モーターを初期位置に移動します ---")
+            try:
+                # 初期角度をmoveMotors.jsonに書き込む
+                with file_lock:
+                    if os.path.exists(config.MOVE_MOTORS_JSON_PATH):
+                        with open(config.MOVE_MOTORS_JSON_PATH, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            motor_data = json.loads(content) if content else {}
+                    else:
+                        motor_data = {}
+
+                    # 初期角度を設定
+                    motor_data['elbow'] = config.INITIAL_ELBOW_ANGLE
+                    motor_data['wrist'] = config.INITIAL_WRIST_ANGLE
+                    motor_data['shoulder'] = config.INITIAL_SHOULDER_ANGLE
+
+                    # ファイルに書き込む
+                    with open(config.MOVE_MOTORS_JSON_PATH, 'w', encoding='utf-8') as f:
+                        json.dump(motor_data, f, indent=4, ensure_ascii=False)
+
+                    print(f"初期位置を設定: elbow={config.INITIAL_ELBOW_ANGLE}, wrist={config.INITIAL_WRIST_ANGLE}, shoulder={config.INITIAL_SHOULDER_ANGLE}")
+            except Exception as e:
+                print(f"[エラー] 初期位置の設定に失敗: {e}")
+
+        elif value == 'off':
+            # 電源OFF時: 必要に応じて処理を追加
+            print("--- 電源をオフにしました ---")
 
     elif action == config.BRIGHTNESS_COMMAND:
         # 明るさ変更の処理 (value は 0〜100 の数値)

@@ -69,12 +69,65 @@ socket.on('disconnect', () => {
 // 集中度を表示する責務を持つファイルに移動する方が
 // 本来は望ましいです。
 socket.on('status_update', (data) => {
-	console.log('受信データ:', data);
+	console.log('📨 WebSocketで受信したデータ (api.js):', data);
 
 	const concentrationDisplay = document.getElementById('concentration');
 	if (concentrationDisplay) {
-		const level = data.concentration_level || 'N/A';
+		const level = data.concentration_level || 'Unknown';
 		concentrationDisplay.textContent = level;
+
+		// 集中度に応じて画像グループを変更
+		// High, Medium, Low, Unknown の4段階に対応
+		if (typeof setImageGroupByConcentration === 'function') {
+			console.log('🎯 集中度レベル (level変数):', level);
+
+			// level変数から集中度カテゴリを抽出
+			// "High (85%)" → "High"
+			// "Medium" → "Medium"
+			// "Low" → "Low"
+			// "Unknown" または "N/A" → "Unknown"
+			let levelCategory = 'Unknown'; // デフォルト値
+
+			if (typeof level === 'string') {
+				// 文字列から High, Medium, Low を検索（大文字小文字区別なし）
+				if (level.match(/High/i)) {
+					levelCategory = 'High';
+				} else if (level.match(/Medium/i)) {
+					levelCategory = 'Medium';
+				} else if (level.match(/Low/i)) {
+					levelCategory = 'Low';
+				}
+				// それ以外（"Unknown", "N/A"など）はデフォルトの "Unknown" のまま
+			}
+
+			// concentration_level を画像グループに変換
+			// High → グループ4 (集中度 高: 76-100%)
+			// Medium → グループ2 (集中度 中低: 26-50%)
+			// Low → グループ1 (集中度 低: 0-25%)
+			// Unknown → グループ1 (集中度 低: 0-25%)
+			const groupMapping = {
+				'High': 4,
+				'Medium': 2,
+				'Low': 1,
+				'Unknown': 1
+			};
+
+			const groupNumber = groupMapping[levelCategory];
+
+			// グループ番号に対応する集中度パーセンテージを計算
+			// グループ1: 12% (Low/Unknown)
+			// グループ2: 38% (Medium)
+			// グループ3: 63% (使用しない)
+			// グループ4: 88% (High)
+			const concentrationPercent = groupNumber === 4 ? 88 :
+										 groupNumber === 3 ? 63 :
+										 groupNumber === 2 ? 38 : 12;
+
+			console.log(`🔄 画像グループ変更: level="${level}" → カテゴリ="${levelCategory}" → グループ${groupNumber} (${concentrationPercent}%)`);
+			setImageGroupByConcentration(concentrationPercent);
+		} else {
+			console.warn('⚠️ setImageGroupByConcentration関数が見つかりません');
+		}
 	}
 
 	const nameElement = document.getElementById('username-display');
@@ -82,8 +135,6 @@ socket.on('status_update', (data) => {
 		// データに username が入っていれば表示、なければ 'ゲスト'
 		nameElement.textContent = data.username || 'ゲスト';
 	}
-
-	// (animation.js に関連するロジックはここには含めない)
 });
 
 /**

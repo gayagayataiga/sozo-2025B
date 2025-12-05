@@ -845,12 +845,16 @@ button {
 
 	/* (3) モーダル（ポップアップ）を調整 */
 	.modal-content {
-		width: 100%;
-		/* スマホ画面全体を使う */
-		height: 100%;
+		width: 95%;
+		/* スマホ画面の95%に調整 */
+		height: auto;
+		/* 高さは内容に応じて自動調整 */
+		max-height: 85vh;
+		/* 最大高さを画面の85%に制限 */
 		margin: 0;
-		padding: 10px;
-		border-radius: 0;
+		padding: 15px;
+		border-radius: 8px;
+		/* 角を少し丸める */
 	}
 
 	/* (4) フォントサイズを少し小さくする (任意) */

@@ -9,24 +9,25 @@
  */
 
 // --- ロボットの動作を定義する定数 ---
+// ※ server.pyとconfig.pyの初期角度と一致させること
 
-// 肘 (Arm)
-export const ANGLE_HOME = 100;
+// 肘 (Arm) - 初期位置90度
+export const ANGLE_HOME = 90;
 export const ANGLE_STEP = 1;
-export const ANGLE_MIN = 80;
-export const ANGLE_MAX = 120;
+export const ANGLE_MIN = 50;
+export const ANGLE_MAX = 130;
 
-// 手首 (Wrist)
-export const WRIST_ANGLE_HOME = 0;
+// 手首 (Wrist) - 初期位置45度
+export const WRIST_ANGLE_HOME = 45;
 export const WRIST_ANGLE_STEP = 5;
-export const WRIST_ANGLE_MIN = -30;
-export const WRIST_ANGLE_MAX = 30;
+export const WRIST_ANGLE_MIN = 15;
+export const WRIST_ANGLE_MAX = 75;
 
-// 肩 (Shoulder)
-export const SHOULDER_ANGLE_HOME = 0;
+// 肩 (Shoulder) - 初期位置90度
+export const SHOULDER_ANGLE_HOME = 90;
 export const SHOULDER_ANGLE_STEP = 5;
-export const SHOULDER_ANGLE_MIN = -20;
-export const SHOULDER_ANGLE_MAX = 20;
+export const SHOULDER_ANGLE_MIN = 70;
+export const SHOULDER_ANGLE_MAX = 110;
 
 
 // --- アプリケーションの現在の状態 (State) ---
