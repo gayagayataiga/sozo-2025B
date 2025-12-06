@@ -839,6 +839,10 @@ button {
 	margin-bottom: 15px;
 }
 
+#log-content-area.active {
+	display: block;
+}
+
 #loading-indicator {
 	text-align: center;
 	color: #bb99ff;
@@ -951,6 +955,9 @@ button {
 	padding: 15px;
 	flex: 1;
 	overflow-y: auto;
+}
+
+#chart-content-area.active {
 	display: flex;
 	flex-direction: column;
 }

@@ -20,15 +20,12 @@ async function loadStudyLogs() {
 
 		// 現在のユーザー名を取得
 		const usernameElement = document.getElementById('username-display');
-		const currentUsername = usernameElement ? usernameElement.textContent : null;
-
-		// ゲストの場合はユーザー名を指定しない（全ユーザーの記録を表示）
-		const username = (currentUsername && currentUsername !== 'ゲスト') ? currentUsername : null;
+		const currentUsername = usernameElement ? usernameElement.textContent.trim() : null;
 
 		// サーバーから勉強記録を取得（ユーザー名でフィルタ）
 		let url = `http://${LOCAL_PC_IP}:5001/api/study-logs?limit=10`;
-		if (username) {
-			url += `&username=${encodeURIComponent(username)}`;
+		if (currentUsername) {
+			url += `&username=${encodeURIComponent(currentUsername)}`;
 		}
 		const response = await fetch(url);
 		const result = await response.json();
@@ -127,13 +124,12 @@ async function loadWeeklyStats() {
 
 		// 現在のユーザー名を取得
 		const usernameElement = document.getElementById('username-display');
-		const currentUsername = usernameElement ? usernameElement.textContent : null;
-		const username = (currentUsername && currentUsername !== 'ゲスト') ? currentUsername : null;
+		const currentUsername = usernameElement ? usernameElement.textContent.trim() : null;
 
 		// サーバーから週間統計を取得
 		let url = `http://${LOCAL_PC_IP}:5001/api/weekly-stats?days=7`;
-		if (username) {
-			url += `&username=${encodeURIComponent(username)}`;
+		if (currentUsername) {
+			url += `&username=${encodeURIComponent(currentUsername)}`;
 		}
 		const response = await fetch(url);
 		const result = await response.json();
@@ -169,6 +165,42 @@ function renderWeeklyChart(data) {
 	});
 	const studyMinutes = data.map(d => d.total_minutes);
 
+	// 集中度に基づいて色を決定する関数
+	function getColorByConcentration(avgConcentration) {
+		if (avgConcentration === null || avgConcentration === undefined) {
+			// データがない場合はグレー
+			return {
+				background: 'rgba(128, 128, 128, 0.6)',
+				border: 'rgba(128, 128, 128, 1)'
+			};
+		}
+
+		// 集中度の閾値を設定 (適宜調整してください)
+		if (avgConcentration >= 7) {
+			// High: 赤
+			return {
+				background: 'rgba(255, 99, 99, 0.6)',
+				border: 'rgba(255, 99, 99, 1)'
+			};
+		} else if (avgConcentration >= 4) {
+			// Medium: 緑
+			return {
+				background: 'rgba(99, 255, 132, 0.6)',
+				border: 'rgba(99, 255, 132, 1)'
+			};
+		} else {
+			// Low: 青
+			return {
+				background: 'rgba(99, 132, 255, 0.6)',
+				border: 'rgba(99, 132, 255, 1)'
+			};
+		}
+	}
+
+	// 各日の集中度に基づいて色を設定
+	const backgroundColors = data.map(d => getColorByConcentration(d.avg_concentration).background);
+	const borderColors = data.map(d => getColorByConcentration(d.avg_concentration).border);
+
 	// グラフを作成
 	weeklyChart = new Chart(ctx, {
 		type: 'bar',
@@ -177,8 +209,8 @@ function renderWeeklyChart(data) {
 			datasets: [{
 				label: '勉強時間（分）',
 				data: studyMinutes,
-				backgroundColor: 'rgba(187, 153, 255, 0.6)',
-				borderColor: 'rgba(187, 153, 255, 1)',
+				backgroundColor: backgroundColors,
+				borderColor: borderColors,
 				borderWidth: 2,
 				borderRadius: 8
 			}]
