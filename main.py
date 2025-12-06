@@ -18,7 +18,15 @@ try:
     from src.switchbot_python.switchbot_API_test import TOKEN, SECRET, TARGET_DEVICE_ID, generate_auth_headers, send_command
     from src.serverFolder.sendrasev3command import EV3Commander
     from src.makehash import check_json_changes
-    from src.switchbot_python.switchbot_API_ble import control_switchbot_light, LIGHT_MAC_ADDRESS, COMMAND_ON, COMMAND_OFF, COMMAND_BLUE, COMMAND_GREEN, COMMAND_RED, CHARACTERISTIC_UUID
+    # switchbot_API_last.pyを使用（BLE優先、失敗時はWiFi APIにフォールバック）
+    from src.switchbot_python.switchbot_API_last import (
+        control_switchbot_light_ble,
+        set_light_color_brightness_ble,
+        LIGHT_MAC_ADDRESS,
+        CHARACTERISTIC_UUID,
+        COMMAND_ON_BLE,
+        COMMAND_OFF_BLE
+    )
     from src import config  # 設定変数をまとめたファイル
     from dbwithpython.save_to_db import save_session_to_db, update_concentration, save_ai_analysis_result  # データベース保存関数
 except ImportError as e:
@@ -132,11 +140,7 @@ print(f"--- 起動シーケンス: SwitchBotライトをONにします ... ---")
 try:
     # 起動時は処理が終わるまで待つという方法もあり (wait_for_completion=True)
     run_async_from_sync(
-        control_switchbot_light(
-            LIGHT_MAC_ADDRESS,
-            COMMAND_ON,
-            CHARACTERISTIC_UUID
-        ),
+        control_switchbot_light_ble(COMMAND_ON_BLE),
         wait_for_completion=False
     )
     print("--- ライト起動完了 ---")
@@ -305,17 +309,8 @@ while True:
                         # 明るさを 100% (0x64) に固定 (必要ならJSONに含める)
                         brightness = content["brightness"]
 
-                        #  辞書をSwitchBot用のbytesコマンドに変換
-                        color_command_bytes = bytes([
-                            0x57, 0x0F, 0x47, 0x01, 0x12,
-                            brightness,
-                            r,
-                            g,
-                            b
-                        ])
-
                         print(
-                            f"--- switchbotライトを RGB({r},{g},{b}) に変更します ---")
+                            f"--- switchbotライトを RGB({r},{g},{b}), 明るさ{brightness}% に変更します ---")
 
                         # 現在のライト色を記録（データベース保存用）
                         current_light_color = {'r': r, 'g': g,
@@ -323,11 +318,7 @@ while True:
 
                         # run_async_from_sync を使う (asyncio.run ではない)
                         run_async_from_sync(
-                            control_switchbot_light(
-                                LIGHT_MAC_ADDRESS,
-                                color_command_bytes,  # <-- 変換後の bytes を渡す
-                                CHARACTERISTIC_UUID
-                            ),
+                            set_light_color_brightness_ble(brightness, r, g, b),
                             wait_for_completion=False  # メインループを止めない
                         )
                 else:
