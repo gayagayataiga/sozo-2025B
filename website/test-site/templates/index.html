@@ -81,16 +81,34 @@
 		</div>
 	</div>
 	<div id="study-log-modal" class="hidden">
-		<div class="modal-content">
+		<div class="modal-content swipe-container">
 			<h2>📚 勉強記録</h2>
-			<div id="log-content-area">
+
+			<!-- タブ切り替えボタン -->
+			<div class="tab-buttons">
+				<button class="tab-btn active" data-tab="list">記録一覧</button>
+				<button class="tab-btn" data-tab="chart">週間グラフ</button>
+			</div>
+
+			<!-- 記録一覧ビュー -->
+			<div id="log-content-area" class="tab-content active">
 				<div id="loading-indicator">読み込み中...</div>
 				<div id="study-logs-list"></div>
 			</div>
+
+			<!-- 週間グラフビュー -->
+			<div id="chart-content-area" class="tab-content">
+				<div id="chart-loading">読み込み中...</div>
+				<div id="weekly-chart-container">
+					<canvas id="weekly-chart"></canvas>
+				</div>
+			</div>
+
 			<button id="close-log-modal-button">閉じる</button>
 		</div>
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/vanilla-picker@2.12.3/dist/vanilla-picker.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js" defer></script>
 	<script>
 		const LOCAL_PC_IP = '{{ local_ip }}'; 

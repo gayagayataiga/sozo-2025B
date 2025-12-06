@@ -12,7 +12,7 @@ from src import config
 
 # データベース読み取りモジュールをインポート
 sys.path.append(os.path.dirname(__file__))
-from dbwithpython.read_from_db import get_recent_sessions
+from dbwithpython.read_from_db import get_recent_sessions, get_weekly_study_stats
 
 # MOVE_MOTORS_JSON_PATH = config.MOVE_MOTORS_JSON_PATH
 file_lock = threading.Lock()  # ファイルの同時書き込みを防ぐロック
@@ -217,6 +217,30 @@ def get_study_logs():
         })
     except Exception as e:
         print(f"[エラー] 勉強記録の取得に失敗: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+@app.route('/api/weekly-stats', methods=['GET'])
+def get_weekly_stats():
+    """ 一週間の勉強統計を取得するAPIエンドポイント """
+    try:
+        # クエリパラメータからユーザー名と日数を取得
+        username = request.args.get('username', None)
+        days = int(request.args.get('days', 7))
+
+        # データベースから週間統計を取得
+        stats = get_weekly_study_stats(username=username, days=days)
+
+        # 成功レスポンスを返す
+        return jsonify({
+            "status": "success",
+            "data": stats
+        })
+    except Exception as e:
+        print(f"[エラー] 週間統計の取得に失敗: {e}")
         return jsonify({
             "status": "error",
             "message": str(e)

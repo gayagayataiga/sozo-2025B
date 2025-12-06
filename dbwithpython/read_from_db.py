@@ -217,6 +217,105 @@ def get_ai_analysis_results(session_id=None, limit=10):
     return results
 
 
+def get_weekly_study_stats(username=None, days=7):
+    """
+    過去N日間の日別勉強統計を取得する
+
+    Args:
+        username: ユーザー名（Noneの場合は全ユーザー）
+        days: 取得する日数（デフォルト7日間）
+
+    Returns:
+        list of dict: 日別の統計情報
+            [{
+                'date': str,  # 'YYYY-MM-DD'
+                'total_minutes': int,
+                'session_count': int,
+                'avg_concentration': float
+            }, ...]
+    """
+    import sqlite3
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    # 過去N日間の開始日を計算
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days-1)
+    start_date_str = start_date.strftime("%Y-%m-%d 00:00:00")
+
+    if username:
+        sql = '''
+            SELECT timestamp, study_duration_minutes, concentration_avg
+            FROM study_logs
+            WHERE username = ? AND timestamp >= ?
+            ORDER BY timestamp ASC
+        '''
+        cursor.execute(sql, (username, start_date_str))
+    else:
+        sql = '''
+            SELECT timestamp, study_duration_minutes, concentration_avg
+            FROM study_logs
+            WHERE timestamp >= ?
+            ORDER BY timestamp ASC
+        '''
+        cursor.execute(sql, (start_date_str,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    # 日付ごとに集計
+    stats_by_date = defaultdict(lambda: {
+        'total_minutes': 0,
+        'session_count': 0,
+        'concentration_sum': 0,
+        'concentration_count': 0
+    })
+
+    for row in rows:
+        timestamp_str = row[0]
+        duration = row[1] or 0
+        concentration = row[2]
+
+        # 日付を取得（YYYY-MM-DD形式）
+        date_str = timestamp_str.split(' ')[0]
+
+        stats_by_date[date_str]['total_minutes'] += duration
+        stats_by_date[date_str]['session_count'] += 1
+
+        if concentration is not None:
+            stats_by_date[date_str]['concentration_sum'] += concentration
+            stats_by_date[date_str]['concentration_count'] += 1
+
+    # 過去N日分の結果を作成（データがない日も含める）
+    result = []
+    for i in range(days):
+        current_date = start_date + timedelta(days=i)
+        date_str = current_date.strftime("%Y-%m-%d")
+
+        stats = stats_by_date.get(date_str, {
+            'total_minutes': 0,
+            'session_count': 0,
+            'concentration_sum': 0,
+            'concentration_count': 0
+        })
+
+        avg_concentration = None
+        if stats['concentration_count'] > 0:
+            avg_concentration = stats['concentration_sum'] / stats['concentration_count']
+
+        result.append({
+            'date': date_str,
+            'total_minutes': stats['total_minutes'],
+            'session_count': stats['session_count'],
+            'avg_concentration': avg_concentration
+        })
+
+    return result
+
+
 # テスト用
 if __name__ == "__main__":
     print("=== 最近のセッション（統計のみ） ===")
