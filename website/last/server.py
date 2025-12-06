@@ -7,6 +7,11 @@ import re
 import socket
 import json
 import os
+import sys
+
+# データベース読み取りモジュールをインポート
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from dbwithpython.read_from_db import get_recent_sessions
 
 DATA_JSON_PATH = "data.json"
 
@@ -109,6 +114,32 @@ def handle_control():
         print(f"--- 未知のアクション {action} です ---")
     # ブラウザに「正常に受け取った」ことを伝える
     return jsonify({"status": "success", "received_action": action})
+
+
+@app.route('/api/study-logs', methods=['GET'])
+def get_study_logs():
+    """ 勉強記録を取得するAPIエンドポイント """
+    try:
+        # クエリパラメータからユーザー名と取得件数を取得
+        username = request.args.get('username', None)
+        limit = int(request.args.get('limit', 10))
+
+        # データベースから勉強記録を取得
+        sessions = get_recent_sessions(username=username, limit=limit)
+
+        # 成功レスポンスを返す
+        return jsonify({
+            "status": "success",
+            "data": sessions,
+            "count": len(sessions)
+        })
+    except Exception as e:
+        print(f"[エラー] 勉強記録の取得に失敗: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 
 # ------------------------------------------------------------------
 # 3. サーバーPCの情報をブラウザに「送信」する (WebSocket)
