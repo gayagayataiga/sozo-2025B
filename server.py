@@ -9,6 +9,7 @@ import json
 import os
 import sys
 from src import config
+import get_ai_responce
 
 # データベース読み取りモジュールをインポート
 sys.path.append(os.path.dirname(__file__))
@@ -22,6 +23,7 @@ app = Flask(__name__, template_folder=config.INDEX_HTML_PATH,
             static_folder=config.STATIC_FILES_PATH)
 app.config['SECRET_KEY'] = 'your_secret_key'  # 実際にはランダムな文字列に
 CORS(app)  # すべてのオリジンからのリクエストを許可
+app.register_blueprint(get_ai_responce.colab_bp)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # 集中度レベルのダミーデータ
@@ -85,6 +87,7 @@ def serve_index():
 
     #  'index.html' テンプレートをレンダリングし、IPアドレスを渡す
     return render_template('index.html', local_ip=host_ip)
+
 
 
 # ------------------------------------------------------------------
@@ -206,8 +209,11 @@ def get_study_logs():
         username = request.args.get('username', None)
         limit = int(request.args.get('limit', 10))
 
+        print(f"[INFO] /api/study-logs リクエスト: username='{username}', limit={limit}")
+
         # データベースから勉強記録を取得
         sessions = get_recent_sessions(username=username, limit=limit)
+        print(f"[INFO] 取得したセッション数: {len(sessions)}")
 
         # 成功レスポンスを返す
         return jsonify({
@@ -231,8 +237,11 @@ def get_weekly_stats():
         username = request.args.get('username', None)
         days = int(request.args.get('days', 7))
 
+        print(f"[INFO] /api/weekly-stats リクエスト: username='{username}', days={days}")
+
         # データベースから週間統計を取得
         stats = get_weekly_study_stats(username=username, days=days)
+        print(f"[INFO] 取得した統計データ: {len(stats)}日分")
 
         # 成功レスポンスを返す
         return jsonify({
@@ -260,6 +269,7 @@ def send_status_updates():
         # --- デフォルト値を設定 ---
         current_concentration = config.AI_ANALYSIS_ERROR_VALUE
         is_sleeping_now = False  # 睡眠状態も取得する例
+        username = "Gayagaya"  # デフォルトのユーザー名
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
         try:
@@ -303,7 +313,7 @@ def send_status_updates():
             socketio.emit('status_update', data_to_send)
 
             print(
-                f" ブラウザへ送信: 集中度={current_concentration}, 睡眠={is_sleeping_now}")
+                f" ブラウザへ送信: 集中度={current_concentration}, 睡眠={is_sleeping_now}, ユーザー名={username}")
 
         except Exception as e:
             print(f"[エラー] send_status_updates ループ中にエラー: {e}")
@@ -328,12 +338,12 @@ def handle_disconnect():
 # 4. サーバーの起動
 # ------------------------------------------------------------------
 if __name__ == '__main__':
-    print("サーバーを http://0.0.0.0:5001 で起動します...")
+    print("サーバーを http://0.0.0.0:5003 で起動します...")
 
     # バックグラウンドタスク（send_status_updates）を開始
     threading.Thread(target=send_status_updates, daemon=True).start()
 
     # Flask-SocketIOサーバーを起動
     # host='0.0.0.0' は、ローカルネットワーク内（スマホなど）からアクセス可能にする設定
-    socketio.run(app, host='0.0.0.0', port=5001,
+    socketio.run(app, host='0.0.0.0', port=5003,
                  debug=True, allow_unsafe_werkzeug=True)

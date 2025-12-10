@@ -1,218 +1,100 @@
-import os
 import json
-import time
-import uuid
+import os
 import sys
+import time
+import requests
 import numpy as np
 
-# データベース読み取り関数をインポート
-try:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'dbwithpython'))
-    from read_from_db import get_recent_sessions_with_frames
-    print("Successfully imported database functions.")
-except ImportError as e:
-    print(f"Warning: Could not import database functions: {e}")
-    print("Database history will not be sent to Colab.")
-    get_recent_sessions_with_frames = None
-
 # --- 設定項目 ---
-# main.py が生成する入力ファイル
+# main.py から渡される入力ファイル
 INPUT_JSON_PATH = "ai_input.json"
-# このスクリプトが生成する結果ファイル (main.py が読み取る)
+# main.py に渡す結果ファイル
 RESULT_JSON_PATH = "ai_result.json"
-# 分析をリクエストする Colab サーバーのエンドポイント
-ANALYSIS_SERVER_URL = "https://abrielle-crustal-lowell.ngrok-free.dev/upload_json"
-# サーバーへの接続タイムアウト（秒）
-SERVER_TIMEOUT = 10.0
-# データベースから取得する過去のセッション数
-DB_HISTORY_LIMIT = 5
 
-# 依存ライブラリのインポートチェック
-try:
-    import requests  # requestsライブラリをインポート
-    print("Successfully imported requests.")
-except ModuleNotFoundError as e:
-    print(f"---  FATAL: requests ライブラリが見つかりません ---")
-    print(f"ERROR during import: {e}")
-    print("pip install requests を実行してください。")
-    sys.exit(1)  # 必須ライブラリがない場合は終了
+# ★ここをColabのngrok URLに変更してください
+# (末尾に /upload_json などのエンドポイントが必要かはColab側のコード次第ですが、通常は必要です)
+COLAB_SERVER_URL = "https://abrielle-crustal-lowell.ngrok-free.dev/upload_json"
 
+# タイムアウト設定 (秒)
+TIMEOUT_SECONDS = 10.0
 
-# ヘルパークラス・関数
 class NumpyEncoder(json.JSONEncoder):
-    """ Numpy配列をJSONシリアライズ可能にするためのエンコーダー """
-
+    """ Numpy配列をJSONで送れるようにするおまじない """
     def default(self, obj):
         if isinstance(obj, np.ndarray):
-            return obj.tolist()  # Numpy配列をPythonリストに変換
+            return obj.tolist()
         if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
                             np.int16, np.int32, np.int64, np.uint8,
                             np.uint16, np.uint32, np.uint64)):
             return int(obj)
         if isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
             return float(obj)
-        if isinstance(obj, (np.complex_, np.complex64, np.complex128)):
-            return {'real': obj.real, 'imag': obj.imag}
         return json.JSONEncoder.default(self, obj)
 
+def main():
+    print("--- ai.py (Bridge to Colab) Started ---")
 
-def get_analysis_from_server(input_payload, server_url):
-    """
-    Colabサーバーに分析をリクエストし、結果のJSONを返す
-    """
-    print(f"Sending analysis request to {server_url}...")
+    # 1. main.py が作ったデータを読み込む
+    if not os.path.exists(INPUT_JSON_PATH):
+        print(f"[Error] Input file not found: {INPUT_JSON_PATH}")
+        return
+
     try:
-        # requests.post を使い、 json=... でデータを送信
-        # Colab側が分析に時間がかかる可能性があるため、timeoutを設定
-        response = requests.post(
-            server_url,
-            data=json.dumps(input_payload, cls=NumpyEncoder),
-            headers={'Content-Type': 'application/json'},
-            timeout=SERVER_TIMEOUT
-        )
-        response.raise_for_status()  # 200系以外のステータスコードならエラー
+        with open(INPUT_JSON_PATH, 'r', encoding='utf-8') as f:
+            input_data = json.load(f)
+        print(" -> Data loaded from ai_input.json")
+    except Exception as e:
+        print(f"[Error] Failed to load input JSON: {e}")
+        return
 
-        # サーバーからのレスポンス(JSON)をパースして返す
-        analysis_result = response.json()
-        print(f" Analysis response received from server.")
-        # print(f"   Server Response: {analysis_result}")
-        return analysis_result
+    # 2. Colabにデータを送信して分析を依頼
+    print(f" -> Sending data to Colab: {COLAB_SERVER_URL}")
+    
+    result_data = {}
+    try:
+        # POSTリクエストで送信
+        response = requests.post(
+            COLAB_SERVER_URL,
+            json=input_data, # 読み込んだデータをそのまま転送
+            headers={'Content-Type': 'application/json'},
+            timeout=TIMEOUT_SECONDS
+        )
+        
+        # ステータスコードの確認
+        response.raise_for_status()
+        
+        # 3. Colabからの結果を受け取る
+        result_data = response.json()
+        print(" -> Received response from Colab")
+        
+        # 成功フラグなどを念のため追加
+        result_data["status"] = "success"
 
     except requests.exceptions.Timeout:
-        print(
-            f" Failed to get analysis: Server timed out ({SERVER_TIMEOUT}s)")
-        return None
-    except requests.exceptions.RequestException as e:
-        print(f" Failed to get analysis: Request failed: {e}")
-        return None
-    except json.JSONDecodeError:
-        print(f" Failed to get analysis: Server returned invalid JSON.")
-        print(f"   Server Response (text): {response.text}")
-        return None
+        print(f"[Error] Connection timed out ({TIMEOUT_SECONDS}s)")
+        result_data = {"status": "error", "message": "Colab timeout"}
+        
+    except requests.exceptions.ConnectionError:
+        print(f"[Error] Could not connect to Colab. Check URL or ngrok status.")
+        result_data = {"status": "error", "message": "Connection failed"}
+        
     except Exception as e:
-        print(
-            f" An unexpected error occurred during server communication: {e}")
-        return None
+        print(f"[Error] Unexpected error: {e}")
+        # レスポンスがJSONじゃなかった場合など
+        if 'response' in locals():
+             print(f"Server response text: {response.text}")
+        result_data = {"status": "error", "message": str(e)}
 
-
-# --- ローカルの analyze_time_series 関数は削除 ---
-# メイン処理
-def main_process():
-    """
-    メインの処理フロー
-    1. 入力読み込み
-    2. Colabサーバーに分析をリクエスト
-    3. 結果をローカル保存 (main.py用)
-    """
-    print("--- ai.py started ---")
-    print(f"Python Executable: {sys.executable}")
-    unique_id = str(uuid.uuid4())  # この実行固有のID
-    print(f"Run ID: {unique_id}")
-
-    # ---  入力JSONの読み込み ---
-    if not os.path.exists(INPUT_JSON_PATH):
-        print(f"---  FATAL: Input file not found: {INPUT_JSON_PATH} ---")
-        return
-
+    # 4. 結果を main.py が読める形（ファイル）で保存
     try:
-        with open(INPUT_JSON_PATH, 'r') as f:
-            input_data = json.load(f)
-        print("Input JSON loaded successfully.")
-    except json.JSONDecodeError:
-        print(f"---  FATAL: Could not decode JSON from {INPUT_JSON_PATH} ---")
-        return
+        with open(RESULT_JSON_PATH, 'w', encoding='utf-8') as f:
+            json.dump(result_data, f, indent=4, ensure_ascii=False, cls=NumpyEncoder)
+        print(f" -> Result saved to {RESULT_JSON_PATH}")
+        
     except Exception as e:
-        print(
-            f"---  FATAL: An unexpected error occurred during loading: {e} ---")
-        return
+        print(f"[Error] Failed to save result JSON: {e}")
 
-    # --- データベースから過去のセッションデータを取得 ---
-    historical_sessions = []
-    if get_recent_sessions_with_frames:
-        try:
-            username = input_data.get('name', None)
-            print(f"データベースから過去{DB_HISTORY_LIMIT}セッションを読み込み中...")
-            historical_sessions = get_recent_sessions_with_frames(
-                username=username,
-                limit=DB_HISTORY_LIMIT
-            )
-            print(f"過去{len(historical_sessions)}セッションのデータを取得しました。")
-            for i, session in enumerate(historical_sessions):
-                print(f"  セッション{i+1}: ID={session['session_id']}, "
-                      f"フレーム数={len(session['frames'])}, "
-                      f"集中度={session['concentration_avg']}")
-        except Exception as e:
-            print(f"Warning: データベースからの履歴取得に失敗しました: {e}")
-            historical_sessions = []
-    else:
-        print("データベース機能が利用できません。履歴データなしで続行します。")
+    print("--- ai.py Finished ---")
 
-    # --- Colabサーバーに送信するデータを準備 ---
-    # 現在のデータ + 過去のセッションデータを含める
-    payload = {
-        'current_data': {
-            'name': input_data.get('name'),
-            'time_series_data': input_data.get('time_series_data', [])
-        },
-        'historical_sessions': historical_sessions
-    }
-
-    # --- Colabサーバーに分析をリクエスト ---
-    if not ANALYSIS_SERVER_URL:
-        print("---  FATAL: ANALYSIS_SERVER_URL が設定されていません。 ---")
-        return
-
-    colab_response = get_analysis_from_server(payload, ANALYSIS_SERVER_URL)
-
-    # --- 最終結果データを作成 ---
-    final_result_data = {}
-
-    if colab_response:
-        # サーバーからのレスポンスをそのまま結果として採用
-        # (Colab側が 'analysis' や 'debug_info' のキーを持つJSONを返すと想定)
-        final_result_data = colab_response
-
-        # 必須キーを追加
-        final_result_data['status'] = "processed_by_colab"
-        final_result_data['colab_run_id'] = colab_response.get(
-            'run_id', 'N/A')  # Colab側のID
-    else:
-        # サーバー分析失敗時のフォールバック (エラー通知)
-        final_result_data = {
-            "status": "error_colab_failed",
-            "analysis": {
-                "is_sleeping": False,  # デフォルト値
-                "concentration": "Unknown"
-            },
-            "debug_info": {
-                "error": "Failed to get analysis from Colab server."
-            }
-        }
-
-    # この ai.py プロセス固有のIDとタイムスタンプを追加
-    final_result_data['local_run_id'] = unique_id
-    final_result_data['processing_timestamp'] = time.time()
-
-    # 入力サマリーを追加 (デバッグ用)
-    time_series = input_data.get('time_series_data', [])
-    latest_data = time_series[-1] if time_series else {}
-    final_result_data['input_summary'] = {
-        "name": input_data.get("name", "N/A"),
-        "latest_ear": latest_data.get('ear'),
-        "latest_mar": latest_data.get('mar'),
-    }
-
-    # --- 結果をローカルファイルに書き出す ---
-    try:
-        with open(RESULT_JSON_PATH, 'w') as f:
-            json.dump(final_result_data, f, indent=4, cls=NumpyEncoder)
-        print(f"Result successfully written to {RESULT_JSON_PATH}")
-    except Exception as e:
-        print(f"[Error] Failed to write result JSON: {e}")
-        # このエラーは致命的ではないかもしれないので、処理は続行
-
-
-# --- スクリプト実行 ---
 if __name__ == "__main__":
-    main_process()
-    print("--- ai.py finished ---")
+    main()

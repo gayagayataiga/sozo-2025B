@@ -1,5 +1,6 @@
 import cv2
 import time
+import mediapipe as mp
 import subprocess  # 非同期で別プロセスを起動するため
 import json       # データの受け渡し（書き込み）のため
 import os         # ファイルの存在確認・削除のため
@@ -19,7 +20,7 @@ try:
     from src.serverFolder.sendrasev3command import EV3Commander
     from src.makehash import check_json_changes
     # switchbot_API_last.pyを使用（BLE優先、失敗時はWiFi APIにフォールバック）
-    from src.switchbot_python.switchbot_API_last import (
+    from src.switchbot_python.switchbot_API_ble import (
         control_switchbot_light_ble,
         set_light_color_brightness_ble,
         LIGHT_MAC_ADDRESS,
@@ -27,6 +28,7 @@ try:
         COMMAND_ON_BLE,
         COMMAND_OFF_BLE
     )
+    from src.sleepornot.drowsinessdetector import DrowsinessDetector
     from src import config  # 設定変数をまとめたファイル
     from dbwithpython.save_to_db import save_session_to_db, update_concentration, save_ai_analysis_result  # データベース保存関数
 except ImportError as e:
@@ -79,6 +81,68 @@ def run_async_from_sync(coro, wait_for_completion=False):
         pass
 
 
+class PostureLearner:
+    def __init__(self, learning_rate=0.01):
+        self.mean = 90.0  # 初期平均（直立90度と仮定）
+        self.variance = 10.0 # 初期分散
+        self.std_dev = np.sqrt(self.variance)
+        self.n_samples = 0
+        self.calibration_frames = 100 # 最初の何フレームを初期学習に使うか
+        self.alpha = learning_rate # 学習率（新しいデータをどれくらい重視するか）
+        self.threshold_sigma = 2.5 # 標準偏差の何倍離れたら異常とするか
+
+    def update(self, new_angle):
+        self.n_samples += 1
+
+        # --- 1. 初期キャリブレーション期間 ---
+        if self.n_samples <= self.calibration_frames:
+            # 逐次平均・分散の計算（Welfordのアルゴリズム的な簡易版）
+            if self.n_samples == 1:
+                self.mean = new_angle
+            else:
+                old_mean = self.mean
+                self.mean = old_mean + (new_angle - old_mean) / self.n_samples
+                self.variance = self.variance + ((new_angle - old_mean) * (new_angle - self.mean) - self.variance) / self.n_samples
+            
+            self.std_dev = np.sqrt(self.variance)
+            return "CALIBRATING", 0.0
+
+        # --- 2. 異常検知 & オンライン学習 ---
+        
+        # 異常度（Zスコア）の計算: 平均からどれだけ離れているか
+        # abs(現在の値 - 平均) / 標準偏差
+        diff = abs(new_angle - self.mean)
+        if self.std_dev == 0: self.std_dev = 0.001 # ゼロ除算防止
+        z_score = diff / self.std_dev
+
+        state = "AWAKE"
+        
+        # 閾値を超えたら「異常（睡眠）」
+        if z_score > self.threshold_sigma:
+            state = "SLEEPING"
+            # 重要: 寝ている時のデータは「正常」として学習させない！
+            # ここでは学習更新をスキップします
+        else:
+            # 起きているなら、少しだけモデルを更新して今の姿勢に馴染ませる
+            # 指数移動平均 (Exponential Moving Average) を使用
+            self.mean = (1 - self.alpha) * self.mean + self.alpha * new_angle
+            
+            # 分散の更新
+            new_variance = (new_angle - self.mean) ** 2
+            self.variance = (1 - self.alpha) * self.variance + self.alpha * new_variance
+            self.std_dev = np.sqrt(self.variance)
+
+        return state, z_score
+
+
+def calculate_angle(a, b):
+    a = np.array(a); b = np.array(b)
+    radians = np.arctan2(b[1] - a[1], b[0] - a[0])
+    angle = np.abs(radians * 180.0 / np.pi)
+    if angle > 180.0: angle = 360 - angle
+    return angle
+
+
 # 使うpythonの実行ファイルパスを取得
 # ai.pyをサブプロセスで起動する際に同じPython環境を使うため
 # これがないとただのpythonになり、仮想環境に入っているライブラリを使えない
@@ -110,6 +174,15 @@ print("AIモデルを初期化しています...")
 try:
     detector_body = UpperBodyDetector()
     identifier_person = PersonIdentifier()
+    
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    mp_drawing = mp.solutions.drawing_utils
+    
+    posture_learner = PostureLearner(learning_rate=0.05)
+    drowsiness_detector = DrowsinessDetector()
+    print("Poseモデル初期化完了")
+    
 except Exception as e:
     print(f"モデルの初期化中にエラーが発生しました: {e}")
     exit()
@@ -148,11 +221,10 @@ except Exception as e:
     print(f"警告: 起動時のライト制御に失敗しました: {e}")
     print("（Bluetoothが有効か、MACアドレスが正しいか確認してください）")
 
+
 # --- Numpy配列をJSONに変換するためのヘルパー関数 ---
 # 顔の68個の点をAIに渡すときに使うかもだけど、今は使ってない
 # それを使えるモデルが見つからない→作らないといけない
-
-
 class NumpyEncoder(json.JSONEncoder):
     """ Numpy配列をJSONシリアライズ可能にするためのクラス """
 
@@ -200,9 +272,28 @@ while True:
                 print("[S2 -> S3] 顔を検出・識別しました。分析・追跡を継続します。")
                 current_state = config.STATE_ANALYZING_FACE
 
-                # --- 一度だけ挨拶 (MARやPoseも表示) ---
                 for face in face_results:
                     name = face["name"]
+
+                    # 顔を認識したタイミングでdata.jsonのusernameを更新
+                    try:
+                        shared_data = {}
+                        if os.path.exists(config.SHARED_DATA_FILENAME):
+                            with open(config.SHARED_DATA_FILENAME, 'r') as f:
+                                try:
+                                    shared_data = json.load(f)
+                                except json.JSONDecodeError:
+                                    pass
+
+                        shared_data['username'] = name
+
+                        with open(config.SHARED_DATA_FILENAME, 'w') as f:
+                            json.dump(shared_data, f, indent=4)
+
+                        print(f"--- {config.SHARED_DATA_FILENAME} のusernameを {name} に更新しました ---")
+                    except Exception as e:
+                        print(f"[警告] usernameの更新に失敗: {e}")
+
                     if not name.startswith("Unknown"):
                         print(f" Hello {name}!")
                         # MAR (口) と Pose (P/Y/R) も表示
@@ -226,12 +317,53 @@ while True:
         elif current_state == config.STATE_ANALYZING_FACE:
             display_frame, face_results = identifier_person.process_frame(
                 frame, mode="analyze_only")
+            
+            image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            image_rgb.flags.writeable = False
+            pose_results = pose.process(image_rgb)
+            
+            posture_status = "UNKNOWN"
+            posture_z = 0.0
+            neck_angle = 0.0
 
             # hash化した情報を受け取り、switch botを操作する
             changes = check_json_changes(
                 [config.MOVE_MOTORS_JSON_PATH],
                 hash_file=config.SAVE_HASH_DB_PATH
             )
+            
+            if pose_results.pose_landmarks:
+                landmarks = pose_results.pose_landmarks.landmark
+                h, w, _ = display_frame.shape
+
+                # 座標取得 (11:左肩, 12:右肩, 7:左耳, 8:右耳)
+                s_l = [landmarks[11].x, landmarks[11].y]
+                s_r = [landmarks[12].x, landmarks[12].y]
+                e_l = [landmarks[7].x, landmarks[7].y]
+                e_r = [landmarks[8].x, landmarks[8].y]
+                
+                # 中点
+                s_mid = [(s_l[0]+s_r[0])/2, (s_l[1]+s_r[1])/2]
+                e_mid = [(e_l[0]+e_r[0])/2, (e_l[1]+e_r[1])/2]
+                
+                # 角度計算 & 学習器更新
+                neck_angle = calculate_angle(s_mid, e_mid)
+                posture_status, posture_z = posture_learner.update(neck_angle)
+
+                # 描画 (display_frame上に)
+                p1 = (int(s_mid[0]*w), int(s_mid[1]*h))
+                p2 = (int(e_mid[0]*w), int(e_mid[1]*h))
+                
+                color = (0, 255, 0)
+                if posture_status == "CALIBRATING": color = (0, 255, 255)
+                elif posture_status == "SLEEPING": color = (0, 0, 255)
+
+                cv2.line(display_frame, p1, p2, color, 4)
+                cv2.circle(display_frame, p1, 5, (255,255,255), -1)
+                
+                # 画面上に姿勢ステータスを表示
+                cv2.putText(display_frame, f'Posture: {posture_status} (Z:{posture_z:.1f})', 
+                           (20, 230), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
             # 変更があったファイルだけ処理する
             for filepath, content in changes.items():
                 if content == "NoChanges":
@@ -333,23 +465,41 @@ while True:
                     yaw = face['yaw']
                     pitch = face['pitch']  # 上下の傾きも利用可能
                     roll = face['roll']   # 回転も利用可能
+                    
 
-                    # 1. 目の状態 (EAR)
+                    # 目の状態 (EAR)
                     eye_status = "開いている"
                     if ear < config.EAR_THRESHOLD:
                         eye_status = "閉じている "
 
-                    # 2. 口の状態 (MAR)
+                    # 口の状態 (MAR)
                     mouth_status = "閉じている"
                     if mar > config.MAR_THRESHOLD:
                         mouth_status = "開いている "
 
-                    # 3. 顔の向き (Yaw)
+                    # 顔の向き (Yaw)
                     pose_status = "正面"
                     if yaw > config.YAW_THRESHOLD:
                         pose_status = "右向き"
                     elif yaw < -config.YAW_THRESHOLD:
                         pose_status = "左向き"
+                        
+                    # 総合的な居眠り判定
+                    drowsy_status, drowsy_score, details = drowsiness_detector.update(
+						ear=ear,
+						mar=mar,
+						posture_z=posture_z
+					)
+                    # 表示
+                    color = (0, 255, 0)  # 緑 = AWAKE
+                    if drowsy_status == "DROWSY":
+                        color = (0, 255, 255)  # 黄 = 警告
+                    elif drowsy_status == "SLEEPING":
+                        color = (0, 0, 255)  # 赤 = 居眠り
+
+                    cv2.putText(display_frame,
+                                f'{drowsy_status}: {drowsy_score:.1%}',
+                                (20, 260), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
                     # 解釈した結果を出力
                     print(
@@ -364,6 +514,13 @@ while True:
                         'pose_P': pitch,
                         'pose_Y': yaw,
                         'pose_R': roll,
+                        'drowsy_status': drowsy_status,
+                        'drowsy_score': drowsy_score,
+                        'name': name,
+                        'eye_status': eye_status,
+                        'mouth_status': mouth_status,
+                        'pose_status': pose_status,
+                        'details': details,
                         # 必要であればランドマークも
                         # 'landmarks': face['landmarks']
                     }
@@ -391,10 +548,10 @@ while True:
                             session_data = []
                             session_start_time = current_time
 
-                    # 1. AIプロセスが現在実行中か？
+                    #  AIプロセスが現在実行中か？
                     ai_is_running = ai_process and ai_process.poll() is None
 
-                    # 2. 現在時刻がクールダウンを経過しているか？
+                    #  現在時刻がクールダウンを経過しているか？
                     can_trigger_ai = (
                         time.time() - last_ai_trigger_time) > config.AI_COOLDOWN_SECONDS
 
@@ -467,7 +624,7 @@ while True:
 
                 # AIデータを 'ai_analysis' キーとして更新
                 shared_data['ai_analysis'] = ai_data
-                shared_data['user_name'] = name
+                shared_data['username'] = name
 
                 # data.json に書き戻す
                 with open(config.SHARED_DATA_FILENAME, 'w') as f:

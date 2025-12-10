@@ -23,8 +23,8 @@ async function loadStudyLogs() {
 		const currentUsername = usernameElement ? usernameElement.textContent.trim() : null;
 
 		// サーバーから勉強記録を取得（ユーザー名でフィルタ）
-		let url = `http://${LOCAL_PC_IP}:5001/api/study-logs?limit=10`;
-		if (currentUsername) {
+		let url = `http://${LOCAL_PC_IP}:5003/api/study-logs?limit=10`;
+		if (currentUsername && currentUsername !== 'ゲスト') {
 			url += `&username=${encodeURIComponent(currentUsername)}`;
 		}
 		const response = await fetch(url);
@@ -127,8 +127,8 @@ async function loadWeeklyStats() {
 		const currentUsername = usernameElement ? usernameElement.textContent.trim() : null;
 
 		// サーバーから週間統計を取得
-		let url = `http://${LOCAL_PC_IP}:5001/api/weekly-stats?days=7`;
-		if (currentUsername) {
+		let url = `http://${LOCAL_PC_IP}:5003/api/weekly-stats?days=7`;
+		if (currentUsername && currentUsername !== 'ゲスト') {
 			url += `&username=${encodeURIComponent(currentUsername)}`;
 		}
 		const response = await fetch(url);

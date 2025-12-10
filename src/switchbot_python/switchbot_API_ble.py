@@ -1,88 +1,81 @@
-from bleak import BleakClient
 import asyncio
+from bleak import BleakClient
 
-
-# --- 設定 ---
+# --- 1. 定数・設定の定義 ---
+# 他のファイルから import LIGHT_MAC_ADDRESS 等で参照できるようにします
 LIGHT_MAC_ADDRESS = "94:A9:90:76:E3:AE"
-
-# 2. SwitchBot Color BulbのGATT通信用UUID (これが正しい)
 CHARACTERISTIC_UUID = "cba20002-224d-11e6-9fb8-0002a5d5c51b"
 
-# 3. ライトの操作コマンドバイト列
-# オンコマンド: REQ 0x570f470101
-COMMAND_ON = bytes([0x57, 0x0F, 0x47, 0x01, 0x01])
-
-# オフコマンド: REQ 0x570f470102
-COMMAND_OFF = bytes([0x57, 0x0F, 0x47, 0x01, 0x02])
-
-# 4. 色設定コマンド (新しい拡張コマンド形式)
-# 青色 100% (Type 0x12: Lvl + RGB 変更)
-# コマンド: [0x57, 0x0F, 0x47, 0x01, 0x12, Brightness, R, G, B]
-COMMAND_BLUE = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0x00, 0x00, 0xFF])
-
-# 緑色 100% (R=0, G=255, B=0)
-COMMAND_GREEN = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0x00, 0xFF, 0x00])
-
-# 赤色 100% (R=255, G=0, B=0)
-COMMAND_RED = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, 0x64, 0xFF, 0x00, 0x00])
+# 操作コマンド (外部から参照しやすい名前に変更)
+COMMAND_ON_BLE = bytes([0x57, 0x0F, 0x47, 0x01, 0x01])
+COMMAND_OFF_BLE = bytes([0x57, 0x0F, 0x47, 0x01, 0x02])
 
 
-# --- 実行関数 (変更なし) ---
-async def control_switchbot_light(mac_address: str, command: bytes, CHARACTERISTIC_UUID: str):
+# --- 2. 汎用的な送信関数 ---
+async def control_switchbot_light_ble(command: bytes, mac_address: str = LIGHT_MAC_ADDRESS):
     """
-    SwitchBotライトにBLE経由でコマンドを送信する
+    指定されたバイト列コマンドをSwitchBotライトに送信する関数
+    デフォルト引数で MACアドレスを指定しているので、呼び出し時はコマンドだけでOKです。
     """
-    print(f"Connecting to {mac_address}...")
+    # 接続確認用のログ（必要に応じてコメントアウトしてください）
+    # print(f"[BLE] Connecting to {mac_address}...")
 
     try:
-        # BleakClientを使ってデバイスに接続
-        async with BleakClient(mac_address, timeout=10.0) as client:
+        async with BleakClient(mac_address, timeout=5.0) as client:
             if client.is_connected:
-                print("Connected successfully.")
-
-                # キャラクタリスティックにコマンドを書き込む
-                print(f"Writing command: {command.hex()}")
-                # ドキュメントの仕様では応答 (response=True) は必須ではないが、念のため残す
+                # print("[BLE] Connected.")
+                
+                # コマンド送信
                 await client.write_gatt_char(CHARACTERISTIC_UUID, command, response=False)
-                print("Command sent. Light should respond.")
+                print(f"[BLE] Command sent: {command.hex()}")
+                return True
             else:
-                print("Failed to connect.")
-
+                print("[BLE] Failed to connect.")
+                return False
     except Exception as e:
-        print(f"An error occurred: {e}")
-        print("💡 エラーが発生した場合、PCのBluetoothがONか、MACアドレスが正しいか確認してください。")
+        print(f"[BLE Error] {e}")
+        return False
 
 
-# --- メインシーケンス関数 (色変更を追加) ---
-async def main_sequence():
+# --- 3. 色と明るさを指定して送信する関数 ---
+async def set_light_color_brightness_ble(brightness: int, r: int, g: int, b: int, mac_address: str = LIGHT_MAC_ADDRESS):
+    """
+    RGB(0-255)と明るさ(0-100)を指定してライトを制御する関数
+    コマンド列を自動生成して control_switchbot_light_ble に渡します。
+    """
+    # 値の範囲制限 (バリデーション)
+    brightness = max(0, min(100, brightness))
+    r = max(0, min(255, r))
+    g = max(0, min(255, g))
+    b = max(0, min(255, b))
 
-    # 1. 初期点灯 (コマンド変更)
-    print("--- 1. 初期点灯を実行 ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_ON, CHARACTERISTIC_UUID)
+    # コマンド生成: [0x57, 0x0F, 0x47, 0x01, 0x12, Brightness, R, G, B]
+    command = bytes([0x57, 0x0F, 0x47, 0x01, 0x12, brightness, r, g, b])
+    
+    # 送信
+    await control_switchbot_light_ble(command, mac_address)
+
+
+# --- 4. 単体テスト用 (このファイルを直接実行した時だけ動く) ---
+async def _main_test_sequence():
+    print("--- テスト開始 ---")
+    
+    print("ON")
+    await control_switchbot_light_ble(COMMAND_ON_BLE)
     await asyncio.sleep(2)
-
-    # 2. 青色に変更 (コマンド変更)
-    print("\n--- 2. 青色に変更を実行 (新形式) ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_BLUE, CHARACTERISTIC_UUID)
+    
+    print("赤 (明るさ50%)")
+    await set_light_color_brightness_ble(50, 255, 0, 0)
     await asyncio.sleep(2)
-
-    # 3. 緑色に変更 (コマンド変更)
-    print("\n--- 3. 緑色に変更を実行 (新形式) ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_GREEN, CHARACTERISTIC_UUID)
+    
+    print("青 (明るさ100%)")
+    await set_light_color_brightness_ble(100, 0, 0, 255)
     await asyncio.sleep(2)
+    
+    print("OFF")
+    await control_switchbot_light_ble(COMMAND_OFF_BLE)
 
-    # 4. 赤色に変更 (コマンド追加)
-    print("\n--- 4. 赤色に変更を実行 (新形式) ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_RED, CHARACTERISTIC_UUID)
-    await asyncio.sleep(2)
-
-    # 5. 消灯 (コマンド変更)
-    print("\n--- 5. 消灯を実行 (シーケンス終了) ---")
-    await control_switchbot_light(LIGHT_MAC_ADDRESS, COMMAND_OFF, CHARACTERISTIC_UUID)
-
-
-# --- メイン処理 ---
 if __name__ == "__main__":
-
-    # 非同期シーケンス関数を実行
-    asyncio.run(main_sequence())
+    # このファイルを直接 'python switchbot_API_ble.py' で実行した時のみここが動く
+    # import された時は動きません
+    asyncio.run(_main_test_sequence())

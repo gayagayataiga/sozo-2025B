@@ -1,11 +1,11 @@
 {
     "wrist": 45,
-    "elbow": 60,
-    "shoulder": 100,
+    "elbow": 65,
+    "shoulder": 90,
     "color": {
-        "r": 42,
-        "g": 236,
-        "b": 121
+        "r": 255,
+        "g": 255,
+        "b": 255
     },
-    "brightness": 27
+    "brightness": 100
 }

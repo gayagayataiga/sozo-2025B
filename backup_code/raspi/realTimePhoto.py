@@ -1,5 +1,6 @@
 import cv2
 import time
+import threading
 from flask import Flask, Response, render_template_string
 from picamera2 import Picamera2
 
@@ -8,47 +9,60 @@ app = Flask(__name__)
 
 # Picamera2 の初期化
 picam2 = Picamera2()
-# 解像度を低め(640x480)に設定（処理負荷とネットワーク負荷を下げるため）
 config = picam2.create_video_configuration(main={"size": (640, 480)})
 picam2.configure(config)
 picam2.start()
 
-# 映像を連続的に生成するジェネレータ関数
+# グローバル変数で最新フレームを保持
+latest_frame = None
+frame_lock = threading.Lock()
+frame_available = threading.Event()
 
+# カメラから連続的にフレームを取得するスレッド
+def capture_thread():
+    global latest_frame
+    while True:
+        try:
+            # カメラからフレームを1枚取得
+            frame = picam2.capture_array()
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            
+            with frame_lock:
+                latest_frame = frame.copy()
+                frame_available.set()
+            
+            time.sleep(0.033)
+        except Exception as e:
+            print(f"Capture error: {e}")
+            time.sleep(0.1)
 
 def generate_frames():
+    frame_available.wait()
+    
     while True:
-        # カメラからフレームを1枚取得
-        frame = picam2.capture_array()
-
-        # --- AI処理はここで行わない ---
-
-        # フレームをJPEG形式にエンコード
+        with frame_lock:
+            if latest_frame is None:
+                continue
+            frame = latest_frame.copy()
+        
         (flag, encodedImage) = cv2.imencode(".jpg", frame)
-
-        # エンコードが成功しなかったらスキップ
+        
         if not flag:
             continue
-
+        
         # エンコードされた画像をバイト列として送信 (MJPEG形式)
-        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
-               bytearray(encodedImage) + b'\r\n')
-
-# ブラウザで /video_feed にアクセスした時のルート
-
+        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
+              bytearray(encodedImage) + b'\r\n')
+        
+        time.sleep(0.033)
 
 @app.route("/video_feed")
 def video_feed():
-    # generate_frames関数を呼び出し、レスポンスとしてストリームを返す
     return Response(generate_frames(),
                     mimetype="multipart/x-mixed-replace; boundary=frame")
 
-# ブラウザでルート (/) にアクセスした時のルート
-
-
 @app.route("/")
 def index():
-    # /video_feed を表示するだけのシンプルなHTMLを返す
     html_content = """
     <html>
     <head><title>Raspberry Pi Camera Stream</title></head>
@@ -60,9 +74,9 @@ def index():
     """
     return render_template_string(html_content)
 
-
-# スクリプトが直接実行されたらサーバーを起動
 if __name__ == "__main__":
-    # '0.0.0.0' を指定することで、ローカルネットワーク内の他のPCからアクセス可能になる
-    app.run(host="0.0.0.0", port=5001, debug=False,
-            threaded=True)  # debug=True は負荷が上がるので False に変更
+    capture_thread_instance = threading.Thread(target=capture_thread, daemon=True)
+    capture_thread_instance.start()
+    
+    app.run(host="0.0.0.0", port=5001, debug=False, threaded=True)
+    # cloudflared tunnel --url http://localhost:5001

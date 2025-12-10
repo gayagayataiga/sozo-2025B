@@ -9,7 +9,7 @@ PYTHON_EXECUTABLE = sys.executable
 
 # --- ネットワーク設定 (Raspberry Pi / EV3) ---
 # ラズベリーパイのIPアドレス (環境に合わせて変更)
-RASPBERRY_PI_IP = "10.27.75.40"
+RASPBERRY_PI_IP = "133.21.234.43"
 
 # 映像ストリームのポートとパス
 STREAM_PORT = 5001

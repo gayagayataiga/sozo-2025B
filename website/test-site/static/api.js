@@ -13,7 +13,7 @@
 
 // (注意) LOCAL_PC_IP は HTML の <script> タグで定義されている
 // グローバル変数 'LOCAL_PC_IP' を参照します。
-const controlURL = `http://${LOCAL_PC_IP}:5001/api/control`;
+const controlURL = `http://${LOCAL_PC_IP}:5003/api/control`;
 
 /**
  * サーバーの /api/control エンドポイントにコマンドを送信する
@@ -42,7 +42,7 @@ export function sendCommand(action, value) {
 
 // WebSocket 接続を初期化
 // (こちらもグローバルな 'LOCAL_PC_IP' を参照)
-export const socket = io(`http://${LOCAL_PC_IP}:5001`);
+export const socket = io(`http://${LOCAL_PC_IP}:5003`);
 
 // 接続イベント (main.js や status.js に移動しても良い)
 socket.on('connect', () => {
@@ -120,8 +120,8 @@ socket.on('status_update', (data) => {
 			// グループ3: 63% (使用しない)
 			// グループ4: 88% (High)
 			const concentrationPercent = groupNumber === 4 ? 88 :
-										 groupNumber === 3 ? 63 :
-										 groupNumber === 2 ? 38 : 12;
+				groupNumber === 3 ? 63 :
+					groupNumber === 2 ? 38 : 12;
 
 			console.log(`🔄 画像グループ変更: level="${level}" → カテゴリ="${levelCategory}" → グループ${groupNumber} (${concentrationPercent}%)`);
 			setImageGroupByConcentration(concentrationPercent);

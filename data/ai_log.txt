@@ -1,7 +1,2 @@
-Successfully imported database functions.
-Successfully imported requests.
---- ai.py started ---
-Python Executable: C:\Users\sd23099\Desktop\mine 11-18\souzou\sozo-2025B\sozo\Scripts\python.exe
-Run ID: 7cd63db7-a3e3-4681-9c18-0a583ad400c0
----  FATAL: Input file not found: ai_input.json ---
---- ai.py finished ---
+--- ai.py (Bridge to Colab) Started ---
+[Error] Input file not found: ai_input.json
