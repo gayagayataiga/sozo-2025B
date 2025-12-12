@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------
 
 // state.js から電源状態をインポート
-import { isPowerOn } from './state.js';
+import { isPowerOn, setLightColor, setBrightness } from './state.js';
 
 // api.js からサーバー通信関数をインポート
 import { sendCommand } from './api.js';
@@ -83,6 +83,9 @@ if (modalBrightnessSlider) {
 		// (メイン画面の値も更新する場合)
 		// if (brightnessValue) brightnessValue.textContent = value;
 
+		// state.js に現在の明るさを保存
+		setBrightness(value);
+
 		// サーバーに送信 (state.js の isPowerOn を参照)
 		if (isPowerOn) {
 			sendCommand('set_brightness', value);
@@ -105,6 +108,9 @@ if (pickerContainer) {
 			const rgbString = color.rgbString;
 			console.log("選択された色:", rgbString);
 
+			// state.js に現在の色を保存
+			setLightColor(rgbString);
+
 			if (isPowerOn) {
 				sendCommand('set_color_wheel', rgbString);
 			}
@@ -117,6 +123,9 @@ if (resetColorButton) {
 	resetColorButton.addEventListener('click', () => {
 		if (isPowerOn) {
 			const resetColor = 'rgb(255, 255, 255)'; // 白
+
+			// state.js に現在の色を保存
+			setLightColor(resetColor);
 
 			// 1. サーバーに送信
 			sendCommand('set_color_wheel', resetColor);

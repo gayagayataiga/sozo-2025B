@@ -1,20 +1,25 @@
 {
-    "ai_analysis": {
-        "status": "error_colab_failed",
-        "analysis": {
-            "is_sleeping": false,
-            "concentration": "Low"
-        },
-        "debug_info": {
-            "error": "Failed to get analysis from Colab server."
-        },
-        "local_run_id": "f9e17a56-192f-4d30-823e-dcb3901c2ad6",
-        "processing_timestamp": 1762168683.5764918,
-        "input_summary": {
-            "name": "Unknown_2",
-            "latest_ear": 0.28706907447146157,
-            "latest_mar": 0.046296296296296294
-        }
+  "ai_analysis": {
+    "status": "processed_by_colab",
+    "analysis": {
+      "is_sleeping": 0,
+      "concentration": "High (100%)"
     },
-    "username": "Gayagaya"
+    "debug_info": {},
+    "processing_timestamp": 1765513062.154099,
+    "input_summary": {
+      "name": "Gayagaya",
+      "concentration_avg": 99.99831174713334,
+      "concentration_max": 99,
+      "concentration_min": 99,
+      "num_predictions": 153
+    },
+    "summary": {
+      "集中": 5.88235294117647,
+      "眠気": 94.11764705882352,
+      "寝落ち": 0.0
+    },
+    "avg_concentration": 0.9999831174713334
+  },
+  "username": "Gayagaya"
 }

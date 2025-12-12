@@ -62,10 +62,14 @@ function createStudyLogItem(session) {
 	const lightColor = session.light_color;
 	const lightColorStyle = `background-color: rgb(${lightColor.r}, ${lightColor.g}, ${lightColor.b});`;
 
+	// 腕立て回数を計算（分を秒に変換）
+	const pushups = session.study_duration_minutes * 60;
+
 	item.innerHTML = `
 		<h4>📖 ${session.username} さんの記録</h4>
 		<p>📅 日時: ${formattedDate}</p>
 		<p>⏱️ 勉強時間: ${session.study_duration_minutes} 分</p>
+		<p>💪 腕立て相当: ${pushups.toLocaleString()} 回</p>
 		<p>💡 使用した照明色: <span class="light-color-display" style="${lightColorStyle}"></span></p>
 		<div class="study-log-stats">
 			<div class="stat-item">

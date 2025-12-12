@@ -1,28 +1,18 @@
-# config.py: アプリケーションの設定値
-
 import sys
 
-# --- 実行環境設定 ---
-# 使うPythonの実行ファイルパス（ai.pyのサブプロセス起動用）
-# 基本的に変更不要
+
 PYTHON_EXECUTABLE = sys.executable
 
-# --- ネットワーク設定 (Raspberry Pi / EV3) ---
-# ラズベリーパイのIPアドレス (環境に合わせて変更)
-RASPBERRY_PI_IP = "133.21.234.43"
+RASPBERRY_PI_IP = "10.27.75.13"
 
 # 映像ストリームのポートとパス
 STREAM_PORT = 5001
 STREAM_PATH = "/video_feed"
 STREAM_URL = f'http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}'
-# 構築されるURL: f"http://{RASPBERRY_PI_IP}:{STREAM_PORT}{STREAM_PATH}"
 
-# ストリーム接続時の安定待ち時間 (秒)
 STREAM_STABILIZATION_WAIT = 1.0
 
 # --- SwitchBot API設定 ---
-# (注: 元のコードでは別ファイルからインポートしていましたが、
-#  本来config.pyに集約すべき項目です)
 SWITCHBOT_TOKEN_WIFI = "YOUR_SWITCHBOT_TOKEN_HERE"
 SWITCHBOT_SECRET_WIFI = "YOUR_SWITCHBOT_SECRET_HERE"
 SWITCHBOT_TARGET_DEVICE_ID_WIFI = "YOUR_TARGET_DEVICE_ID_HERE"

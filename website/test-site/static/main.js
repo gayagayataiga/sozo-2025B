@@ -20,7 +20,8 @@ import {
 	timerInterval, setTimerInterval,
 	setArmAngle, ANGLE_HOME,
 	setWristAngle, WRIST_ANGLE_HOME,
-	setShoulderAngle, SHOULDER_ANGLE_HOME
+	setShoulderAngle, SHOULDER_ANGLE_HOME,
+	currentLightColor, currentBrightness
 } from './state.js';
 
 // robotModal.js から 肘の画像更新関数 をインポート
@@ -70,11 +71,17 @@ function formatTime(seconds) {
 	return `${h}:${m}:${s}`;
 }
 
+// 秒数を腕立て回数に変換する関数（1秒 = 1回）
+function secondsToPushups(seconds) {
+	return seconds;
+}
+
 function updateTimer() {
 	// state.js から isPowerOn と startTime を参照
 	if (!isPowerOn) return;
 	const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-	timerDisplay.textContent = `経過時間: ${formatTime(elapsedSeconds)}`;
+	const pushups = secondsToPushups(elapsedSeconds);
+	timerDisplay.innerHTML = `経過時間: ${formatTime(elapsedSeconds)}<br>💪 腕立て ${pushups.toLocaleString()} 回相当`;
 }
 
 function startTimer() {
@@ -89,7 +96,7 @@ function stopTimer() {
 	// state.js の timerInterval を参照・更新
 	clearInterval(timerInterval);
 	setTimerInterval(null);
-	timerDisplay.textContent = '経過時間: 00:00:00';
+	timerDisplay.innerHTML = '経過時間: 00:00:00<br>💪 腕立て 0 回相当';
 }
 
 // ------------------------------------------------------------------
@@ -122,7 +129,11 @@ powerToggle.addEventListener('click', () => {
 		// サーバー側で初期位置(90, 45, 90)をmoveMotors.jsonに書き込む
 		sendCommand('power_toggle', 'on');
 
-		// 4. タイマーとアニメーションを開始
+		// 4. 現在の照明設定を使ってライトを点灯
+		sendCommand('set_color_wheel', currentLightColor);
+		sendCommand('set_brightness', currentBrightness);
+
+		// 5. タイマーとアニメーションを開始
 		startTimer();
 		startAnimation(); // animation.js の関数
 

@@ -44,6 +44,10 @@ export let currentArmAngle = ANGLE_HOME;
 export let currentWristAngle = WRIST_ANGLE_HOME;
 export let currentShoulderAngle = SHOULDER_ANGLE_HOME;
 
+// 照明の現在値
+export let currentLightColor = 'rgb(255, 255, 255)'; // 初期色: 白
+export let currentBrightness = 50; // 初期明るさ: 50%
+
 // --- 状態を変更するための関数 (Setter) ---
 // 他のファイルは、状態を直接変更する代わりに
 // これらの関数を呼び出すことを推奨します。
@@ -70,4 +74,12 @@ export function setWristAngle(angle) {
 
 export function setShoulderAngle(angle) {
 	currentShoulderAngle = angle;
+}
+
+export function setLightColor(color) {
+	currentLightColor = color;
+}
+
+export function setBrightness(brightness) {
+	currentBrightness = brightness;
 }

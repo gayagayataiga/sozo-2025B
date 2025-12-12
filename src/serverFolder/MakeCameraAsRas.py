@@ -55,9 +55,6 @@ def start_cloudflared(port):
             line = process.stderr.readline()
             if not line:
                 break
-            
-            # ログを表示したい場合はコメントアウトを外す
-            # print(line.strip()) 
 
             match = url_pattern.search(line)
             if match:
